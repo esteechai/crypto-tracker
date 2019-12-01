@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
-	"net/http"
-
 	"fmt"
+	"net/http"
 
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -38,53 +36,9 @@ func main() {
 	api := &API{DB: DBDriver}
 
 	r := api.setupHttp()
-	http.ListenAndServe(":3000", r)
-}
+	err = http.ListenAndServe(":8080", r)
 
-func TestHandler(w http.ResponseWriter, r *http.Request) {
-	var loginDetails userData
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&loginDetails)
 	if err != nil {
+		fmt.Println("ListenAndServe: ", err)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(loginDetails)
 }
-
-// func (db *DBDriver) LoginHandler(w http.ResponseWriter, r *http.Request) {
-// 	var loginDetails userData
-// 	decoder := json.NewDecoder(r.Body)
-// 	err := decoder.Decode(&loginDetails)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-
-// 	passback, err := db.login(loginDetails.ID)
-
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(passback)
-// 	return
-// }
-
-// func (db *DBDriver) SignupHandler(w http.ResponseWriter, r *http.Request) {
-// 	var signupDetails userSignup
-// 	decoder := json.NewDecoder(r.Body)
-// 	err := decoder.Decode(&signupDetails)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	id, err := uuid.NewV4()
-// 	if err != nil {
-// 		log.Fatalf("failed to generate UUID: %v", err)
-// 	}
-
-// 	idstr := id.String()
-// 	var passback []userSignup
-// 	err = db.Conn.Select(&passback, `INSERT INTO users (id, username, email, password) VALUES ($1, $2, $3, $4)`, idstr, signupDetails.Username, signupDetails.Email, signupDetails.Password)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	w.Header().Set("Content-Type", "application/json")
-// 	json.NewEncoder(w).Encode(passback)
-// 	return
-// }
