@@ -1,4 +1,4 @@
-export interface authenticateData {
+export interface AuthenticateData {
     email: string 
     password: string 
     isSubmit: boolean 
@@ -23,11 +23,16 @@ export interface coinbaseProducts {
     status_message: string 
 }
 
-export interface coinbaseTicker {
-    trade_id: string 
-	price:   string 
-	size:  string 
-	time:    string
-	ask:   string 
-	volume:  string 
+export interface selectedProductID {
+    ticker_id: string 
 }
+
+export interface coinbaseTicker {
+    ID: string 
+	Price:   string 
+	Size:  string 
+	Time:    string
+	Ask:   string 
+	Volume:  string 
+}
+

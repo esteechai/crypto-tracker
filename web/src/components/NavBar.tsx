@@ -1,6 +1,7 @@
 import React from 'react'
 import { StoreContainer } from '../store'
 import { Menu, Input, Search, Dropdown, Icon } from 'semantic-ui-react'
+import { NavLink } from 'react-router-dom'
 interface Props {}
 
 const NavBar: React.FC<Props> = () => {
@@ -13,25 +14,24 @@ const NavBar: React.FC<Props> = () => {
                 />
 
                 <Menu.Item>
-                    <Input
-                        transparent
-                        icon={{name:"search", link:true}}
-                        placeholder="Search"
-                    />
+                    <div className="ui icon input">
+                        <Input type="text "
+                            value={store.searchKey}
+                            placeholder="Search"
+                            onChange={store.handleSearch}
+                        />
+                    <i aria-hidden="true" className="search icon"></i>
+                    </div>          
                 </Menu.Item>
                 <Menu.Menu position="right">
-                <Menu.Item
-                    name="Cryptocurrency"
-                    //active={activeItem === 'bio'}
-                    //onClick={this.handleItemClick}
-                />
+                <Menu.Item>
+                    <NavLink to ="/CryptoList">Cryptocurrency</NavLink>
+                </Menu.Item>
 
-                <Menu.Item
-                    name="Favourites"
-                    //onClick="{}
-                />
-           
-                  
+                <Menu.Item>
+                    <NavLink to ="/">Favourites</NavLink>
+                    </Menu.Item>
+                
             <Dropdown item icon="user"simple>
                 <Dropdown.Menu>
                     <Dropdown.Item>Logout</Dropdown.Item>
@@ -46,4 +46,4 @@ const NavBar: React.FC<Props> = () => {
 
 }
 
-    export default NavBar
+export default NavBar

@@ -12,6 +12,8 @@ const LoginForm: React.FC<Props> = () => {
        // console.log("sucessfully login")
        return <Redirect to= '/dashboard' />
     }
+
+  
     store.useFetchProducts("http://localhost:8080/api/get/products")
     
 return(
@@ -44,6 +46,7 @@ return(
                     <Link to = "/NavBar">Forgot password?</Link>
                     <Link to ="/cryptoList">Crypto List</Link>
                     <Link to="/signupForm"><p>Register</p></Link> 
+                    
                     </Segment>
                 </form>
          </Grid.Column>

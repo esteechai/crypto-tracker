@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import {createContainer} from 'unstated-next'
 import { create } from 'domain'
-import {authenticateData, coinbaseProducts, coinbaseTicker} from "./struct"
+import {AuthenticateData, coinbaseProducts, coinbaseTicker, selectedProductID} from "./struct"
 import { string } from 'prop-types'
 
 export const useStore = () => {
@@ -10,6 +10,8 @@ const [isSignUp, setSignUp] = useState<boolean>(false)
 const [isError, setIsError] = useState<boolean>(false)
 const [errorMsg, setErrorMsg] = useState<string>("")
 const [username, setUsername] = useState<string>("")
+const [ticker, setTicker] = useState<coinbaseTicker | undefined> (undefined) 
+const [isPopUp, setPopUp] = useState<boolean>(false)
 
 const loginValidation = () => {
     if(enteredEmail === ""){
@@ -43,7 +45,7 @@ async function postData(url: string, body:any, tag: string){
         body: JSON.stringify(body),
     })
     const json: any = await response.json()
-    console.log(json.error_msg)
+   // console.log(json.error_msg)
 
     switch(tag){
         case "login":
@@ -53,6 +55,10 @@ async function postData(url: string, body:any, tag: string){
         if(json.success){
             console.log("sign in success")
         }
+        case "ticker":
+          
+            setTicker(json)
+            console.log(json)
     }
 }
 
@@ -60,12 +66,19 @@ const handleLogin = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     setIsSubmit(true)
     event.preventDefault()
     if(loginValidation()){
-        const authenticateData: authenticateData = {email: enteredEmail, password: enteredPassword, isSubmit: isSubmit}
+        const authenticateData: AuthenticateData = {email: enteredEmail, password: enteredPassword, isSubmit: isSubmit}
         postData("http://localhost:8080/api/login", authenticateData, "login")
     } else{
         setIsError(true)
         setErrorMsg("Invalid Email or Password")
     }
+}
+
+const handleSelectedProduct = (id:string) => {
+    setPopUp(true)
+    const selectedProductID: selectedProductID = {ticker_id: id}
+    console.log("store.tsx:", id)
+    postData("http://localhost:8080/api/ticker", selectedProductID, "ticker")  
 }
 
 const handleErrorMsg = (errorFlag: string) => {
@@ -83,7 +96,7 @@ const handleErrorMsg = (errorFlag: string) => {
 
 
 const [productList, setProductList] = React.useState<coinbaseProducts[] | undefined>(undefined)
-const [productTicker, setProductTicker] = React.useState<coinbaseTicker[] | undefined>(undefined)
+
 
 const useFetchProducts = (url: string, options = {}) => {
     const [resp, setResp] = React.useState()
@@ -96,6 +109,7 @@ const useFetchProducts = (url: string, options = {}) => {
                 setResp(json)
                 console.log(json)
                 setProductList(json)
+                setSearchResult(json)
             } catch (err) {
                 setErr(err)
             }
@@ -116,9 +130,9 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
             switch(tag){
                 case "product":
                         setProductList(json)
+                        
+                        
                         break
-                case "ticker":
-                        setProductTicker(json, id:string)
                 default:
                     break
             }
@@ -128,6 +142,18 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
     }
     fetchData()
 }
+
+const [searchKey, setSearchKey] = useState<string>("")
+const [searchResult, setSearchResult] = useState<coinbaseProducts[] | undefined>(undefined)
+
+const handleSearch = (event: React.FormEvent<HTMLInputElement>) => {
+   const input: string = event.currentTarget.value
+    setSearchKey(input)    
+    setSearchResult(productList?productList.filter((result: coinbaseProducts)=> result.id.toLowerCase().includes(input.toLowerCase())):undefined)
+    // setSearchResult(productList)
+
+}
+
 
 return {
     isSubmit,
@@ -142,7 +168,14 @@ return {
     errorMsg,
     productList,
     useFetchProducts,
-    productTicker
+    handleSelectedProduct,
+    ticker,
+    setTicker,
+    isPopUp,
+    setPopUp,
+    handleSearch,
+    searchKey,
+    searchResult
 }
 
 }

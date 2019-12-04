@@ -67,11 +67,31 @@ type Products struct {
 }
 
 type ProductTicker struct {
-	TradeID string `json:"trade_id"`
+	TradeID string `json:"string,trade_id"`
 	Price   string `json:"price"`
 	Size    string `json:"size"`
 	Time    string `json:"time"`
 	Bid     string `json:"bid"`
 	Ask     string `json:"ask"`
 	Volume  string `json:"volume"`
+}
+
+type TickerData struct {
+	ID     string `db:"ticker_id"`
+	Price  string `db:"price"`
+	Size   string `db:"size"`
+	Time   string `db:"time"`
+	Bid    string `db:"bid"`
+	Ask    string `db:"ask"`
+	Volume string `db:"volume"`
+}
+
+type SelectedTickerData struct {
+	ID     string `"json:"id"`
+	Price  string `json:"price"`
+	Size   string `json:"size"`
+	Time   string `json:"time"`
+	Bid    string `json:"bid"`
+	Ask    string `json:"ask"`
+	Volume string `json:"volume"`
 }
