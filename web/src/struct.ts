@@ -36,3 +36,19 @@ export interface coinbaseTicker {
 	Volume:  string 
 }
 
+export interface favTicker {
+    ID: string 
+	Price:   string 
+	Size:  string 
+	Time:    string
+	Ask:   string 
+	Volume:  string 
+}
+
+export interface FavToggle {
+    user_id: string 
+    product_id: string
+    is_fav: boolean 
+}
+
+

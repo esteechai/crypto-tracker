@@ -12,7 +12,7 @@ import (
 //login
 func (d *DBDriver) Login(email string, password string) (string, error) {
 	var data SignInCreds
-	err := d.Conn.Get(&data, `SELECT id, password_hash FROM public."user" WHERE email=$1`, email)
+	err := d.Conn.Get(&data, `SELECT id, password_hash FROM users WHERE email=$1`, email)
 
 	if err != nil {
 		fmt.Println(err)
@@ -46,23 +46,44 @@ func (d *DBDriver) Signup(username string, email string, password string) (bool,
 		fmt.Println(err)
 	}
 
+	//generate user ID
 	userId, err := uuid.NewV4()
 	if err != nil {
 		log.Fatalf("failed to generate UUID: %v", err)
 	}
 	idstr := userId.String()
 
-	_, err = d.Conn.NamedExec(`INSERT INTO public."user" (id, username, email, password_hash) VALUES (:ID, :Username, :Email, :PasswordHash)`,
-		map[string]interface{}{
-			"ID":           idstr,
-			"Username":     username,
-			"Email":        email,
-			"PasswordHash": passwordHash,
-		})
+	//generate verfication token
+	verificationToken, err := uuid.NewV4()
+	if err != nil {
+		log.Fatalf("failed to generate verfication_token: %v", err)
+	}
+	vToken := verificationToken.String()
+
+	//generate reset password token
+	resetPasswordToken, err := uuid.NewV4()
+	if err != nil {
+		log.Fatalf("Failed to generate reset_password_token: %v", err)
+	}
+	passToken := resetPasswordToken.String()
+
+	query := `INSERT INTO users (id, email, username, password_hash, verification, verification_token, reset_pass_token) VALUES (:ID, :Email, :Username, :PasswordHash, :Verification, :VerificationToken, :ResetPassToken)`
+	_, err = d.Conn.NamedExec(query, map[string]interface{}{
+		"ID":                idstr,
+		"Email":             email,
+		"Username":          username,
+		"PasswordHash":      passwordHash,
+		"Verification":      false,
+		"VerificationToken": vToken,
+		"ResetPassToken":    passToken,
+	})
+
+	fmt.Println(err)
 
 	if err != nil {
 		return false, err
 	}
+
 	return true, nil
 }
 
@@ -111,4 +132,36 @@ func (d *DBDriver) SelectedProduct(id string) (*TickerData, error) {
 
 	fmt.Println(data)
 	return data, nil
+}
+
+func (d *DBDriver) AddFav(userId string, productID string) error {
+	favId, err := uuid.NewV4()
+	if err != nil {
+		log.Fatalf("failed to generate fav_id: %v", err)
+	}
+	fav_id := favId.String()
+
+	query := `INSERT INTO users_favourites (fav_id, user_id, ticker_id) VALUES (:FavID, :UserID, :ProductID)`
+	_, err = d.Conn.NamedExec(query, map[string]interface{}{
+		"FavID":     fav_id,
+		"UserID":    userId,
+		"ProductID": productID,
+	})
+
+	if err != nil {
+		fmt.Println(err)
+		return AddFavProductError
+	}
+	return nil
+}
+
+func (d *DBDriver) RemoveFav(userId string, productID string) error {
+	query := `DELETE FROM users_favourites WHERE user_id=$1 AND product_id=$2`
+	_, err := d.Conn.Exec(query, userId, productID)
+
+	if err != nil {
+		fmt.Println(err)
+		return RemoveFavProductError
+	}
+	return nil
 }

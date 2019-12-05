@@ -14,7 +14,7 @@ const CryptoList: React.FC<coinbaseProductsProps> = () => {
         <Card.Group>
             {store.searchResult?store.searchResult.map((product:coinbaseProducts)=>{
                return ( 
-                    <Card>
+                    <Card key={product.id}>
                     <Card.Header>{product.id}</Card.Header>             
                     <Card.Meta>Base currency: {product.base_currency}</Card.Meta>
                     <Card.Meta>Quote currency: {product.quote_currency}</Card.Meta>
@@ -29,7 +29,9 @@ const CryptoList: React.FC<coinbaseProductsProps> = () => {
                                         </Modal.Description></React.Fragment>:null}
                                 </Modal>                                   
                             </span>
-                        <span><Icon name="heart outline" color="red" link onClick=""/></span>               
+                        <span onClick={() => {store.handleFavourite(product.id, store.currentUser)}}>
+                            {store.isFavourite ? <i className="large red heart icon"></i> : <i className="large red heart outline icon" ></i> }
+                        </span>     
                     </Card.Content>    
                 </Card>            
                )             

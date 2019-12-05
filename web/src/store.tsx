@@ -1,10 +1,15 @@
 import React, {useState} from 'react'
 import {createContainer} from 'unstated-next'
 import { create } from 'domain'
-import {AuthenticateData, coinbaseProducts, coinbaseTicker, selectedProductID} from "./struct"
+import {AuthenticateData, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, favTicker} from "./struct"
 import { string } from 'prop-types'
 
 export const useStore = () => {
+
+//setup state 
+const [enteredEmail, setEnteredEmail] = useState<string>("")
+const [enteredPassword, setEnteredPassword] = useState<string>("")
+const [isSubmit, setIsSubmit] = useState<boolean>(false)
 const [isLogin, setIsLogin] = useState<boolean>(false)
 const [isSignUp, setSignUp] = useState<boolean>(false)
 const [isError, setIsError] = useState<boolean>(false)
@@ -12,6 +17,13 @@ const [errorMsg, setErrorMsg] = useState<string>("")
 const [username, setUsername] = useState<string>("")
 const [ticker, setTicker] = useState<coinbaseTicker | undefined> (undefined) 
 const [isPopUp, setPopUp] = useState<boolean>(false)
+const [productList, setProductList] = React.useState<coinbaseProducts[] | undefined>(undefined)
+const [searchKey, setSearchKey] = useState<string>("")
+const [searchResult, setSearchResult] = useState<coinbaseProducts[] | undefined>(undefined)
+const [isFavourite, setIsFavourite] = useState<boolean>(false)
+const [favList, setFavList] = useState<FavToggle [] | undefined>(undefined)
+const [currentUser, setCurrentUser] = useState<string>("")
+const [list, setList] = useState<favTicker [] | undefined>(undefined)
 
 const loginValidation = () => {
     if(enteredEmail === ""){
@@ -22,10 +34,6 @@ const loginValidation = () => {
     return true 
 }
 
-//setup state 
-const [enteredEmail, setEnteredEmail] = useState<string>("")
-const [enteredPassword, setEnteredPassword] = useState<string>("")
-const [isSubmit, setIsSubmit] = useState<boolean>(false)
 
 //set onChange method for email input 
 const handleEnteredEmail = (event: React.FormEvent<HTMLInputElement>) => {
@@ -49,16 +57,22 @@ async function postData(url: string, body:any, tag: string){
 
     switch(tag){
         case "login":
-        setIsError(!json.success)
+        setIsError(!json.is_login)
         setErrorMsg(handleErrorMsg(json.error_msg))
-        setIsLogin(json.success)
-        if(json.success){
-            console.log("sign in success")
-        }
-        case "ticker":
-          
+        setIsLogin(json.is_login)
+        if(json.is_login){
+            setCurrentUser(json.id)
+            console.log("current user: ", currentUser)
+        }   
+        break 
+        case "ticker":      
             setTicker(json)
             console.log(json)
+            break
+        case "favouriteToggle":
+            console.log("fav toggle: ", json)
+            setList(json)
+            break
     }
 }
 
@@ -75,9 +89,7 @@ const handleLogin = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 }
 
 const handleSelectedProduct = (id:string) => {
-    setPopUp(true)
     const selectedProductID: selectedProductID = {ticker_id: id}
-    console.log("store.tsx:", id)
     postData("http://localhost:8080/api/ticker", selectedProductID, "ticker")  
 }
 
@@ -93,9 +105,6 @@ const handleErrorMsg = (errorFlag: string) => {
         return "An Unexpected Error Occured"
     }
 }
-
-
-const [productList, setProductList] = React.useState<coinbaseProducts[] | undefined>(undefined)
 
 
 const useFetchProducts = (url: string, options = {}) => {
@@ -119,7 +128,6 @@ const useFetchProducts = (url: string, options = {}) => {
     return { resp, err }
 }
 
-
 const fetchDataFromAPI =(url:string, tag:string)=> {
     const fetchData = async () => {
         try {
@@ -130,8 +138,6 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
             switch(tag){
                 case "product":
                         setProductList(json)
-                        
-                        
                         break
                 default:
                     break
@@ -143,15 +149,17 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
     fetchData()
 }
 
-const [searchKey, setSearchKey] = useState<string>("")
-const [searchResult, setSearchResult] = useState<coinbaseProducts[] | undefined>(undefined)
-
 const handleSearch = (event: React.FormEvent<HTMLInputElement>) => {
    const input: string = event.currentTarget.value
     setSearchKey(input)    
     setSearchResult(productList?productList.filter((result: coinbaseProducts)=> result.id.toLowerCase().includes(input.toLowerCase())):undefined)
-    // setSearchResult(productList)
+}
 
+const handleFavourite = (productID: string, userID: string) => {
+    setIsFavourite(!isFavourite)
+    const favToggle: FavToggle = {product_id: productID, user_id: userID,is_fav: !isFavourite}
+    console.log("selected product:",favToggle)
+    postData("http://localhost:8080/api/favToggle", favToggle, "favouriteToggle")  
 }
 
 
@@ -175,9 +183,13 @@ return {
     setPopUp,
     handleSearch,
     searchKey,
-    searchResult
+    searchResult,
+    handleFavourite,
+    isFavourite,
+    currentUser,
+    setList,
+    list
 }
-
 }
 
 export const StoreContainer = createContainer(useStore)

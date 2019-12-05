@@ -10,7 +10,7 @@ const LoginForm: React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
     if(store.isLogin){
        // console.log("sucessfully login")
-       return <Redirect to= '/dashboard' />
+       return <Redirect to= '/CryptoList' />
     }
 
   

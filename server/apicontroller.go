@@ -24,13 +24,14 @@ func (api *API) setupHttp() chi.Router {
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
 		AllowCredentials: true,
-		MaxAge:           300, // Maximum value not ignored by any of major browsers
+		MaxAge:           300,
 	})
 	r.Use(cors.Handler)
 	r.Post("/api/login", api.LoginHandler)
 	r.Post("/api/signup", api.SignupHandler)
 	r.Get("/api/get/products", api.ProductHandler)
 	r.Post("/api/ticker", api.TickerHandler)
+	r.Post("/api/favToggle", api.FavouriteHandler)
 	fmt.Println("Successfully connected!")
 	return r
 }
@@ -39,7 +40,7 @@ func (api *API) setupHttp() chi.Router {
 func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
-	passback := &SuccessWithID{ID: "", Success: true, ErrorMsg: ""}
+	passback := &SuccessWithID{ID: "", IsLoggedIn: true, ErrorMsg: ""}
 
 	var loginDetails UserSignInData
 	decoder := json.NewDecoder(r.Body)
@@ -50,11 +51,11 @@ func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	id, err := api.DB.Login(loginDetails.Email, loginDetails.Password)
 	if err != nil {
-		passback = &SuccessWithID{ID: "", Success: false, ErrorMsg: err.Error()}
+		passback = &SuccessWithID{ID: "", IsLoggedIn: false, ErrorMsg: err.Error()}
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
-	passback = &SuccessWithID{ID: id, Success: true, ErrorMsg: ""}
+	passback = &SuccessWithID{ID: id, IsLoggedIn: true, ErrorMsg: ""}
 	json.NewEncoder(w).Encode(passback)
 	return
 }
@@ -62,7 +63,7 @@ func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
 //handle signup validation
 func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	passback := &SignupResult{Success: true, ErrorMsg: ""}
+	passback := &SignupResult{IsSignup: true, ErrorMsg: ""}
 
 	var userSignUpData UserSignUpData
 	decoder := json.NewDecoder(r.Body)
@@ -74,13 +75,13 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = validateEmail(userSignUpData.Email)
 	if err != nil {
-		passback = &SignupResult{Success: false, ErrorMsg: err.Error()}
+		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error()}
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
 	err = validatePassword(userSignUpData.Password)
 	if err != nil {
-		passback = &SignupResult{Success: false, ErrorMsg: err.Error()}
+		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error()}
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
@@ -89,16 +90,19 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		result = false
 		if IsUniqueConstraintError(err, UniqueConstraintUsername) {
-			passback = &SignupResult{Success: result, ErrorMsg: err.Error()}
+			passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
 		}
 		if IsUniqueConstraintError(err, UniqueConstraintEmail) {
-			passback = &SignupResult{Success: result, ErrorMsg: err.Error()}
+			passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
 		}
 		return
 	}
 
-	passback = &SignupResult{Success: true, ErrorMsg: ""}
+	passback = &SignupResult{IsSignup: true, ErrorMsg: ""}
 	json.NewEncoder(w).Encode(passback)
+
+	fmt.Println("passback: ", passback)
+
 	return
 }
 
@@ -147,8 +151,8 @@ func (api *API) GetProductTicker() {
 	}
 }
 
+// get product details
 func (api *API) FetchTicker(id string) {
-	//fmt.Println("fetch ticker to db")
 	resp, err := http.Get("https://api.pro.coinbase.com/products/" + id + "/ticker")
 
 	if err != nil {
@@ -189,4 +193,35 @@ func (api *API) TickerHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(result)
+}
+
+func (api *API) FavouriteHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	passback := &UserFavResult{QueryResult: "", IsSuccess: false}
+
+	var userFav *UserFav
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&userFav)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if userFav.isFav {
+		err := api.DB.RemoveFav(userFav.UserID, userFav.ProductID)
+		if err != nil {
+			fmt.Println(err)
+			passback = &UserFavResult{QueryResult: err.Error(), IsSuccess: false}
+			return
+		}
+	} else {
+		err := api.DB.AddFav(userFav.UserID, userFav.ProductID)
+		if err != nil {
+			fmt.Println(err)
+			passback = &UserFavResult{QueryResult: err.Error(), IsSuccess: false}
+			return
+		}
+	}
+	passback = &UserFavResult{QueryResult: "", IsSuccess: true}
+	json.NewEncoder(w).Encode(passback)
+	return
 }

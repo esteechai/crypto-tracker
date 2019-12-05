@@ -13,3 +13,7 @@ var EmptyRows = errors.New("Empty_Rows")
 var ViolateUNEmail = errors.New("Violate_UN_Email")
 
 var ViolateUNUsername = errors.New("Violate_UN_Username")
+
+var AddFavProductError = errors.New("Add_Fav_Product_Error")
+
+var RemoveFavProductError = errors.New("Remove_Fav_Product_Error")
