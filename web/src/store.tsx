@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import {createContainer} from 'unstated-next'
 import { create } from 'domain'
-import {AuthenticateData, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, favTicker} from "./struct"
+import {AuthenticateData, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, UserFavList, CurrentUserID} from "./struct"
 import { string } from 'prop-types'
 
 export const useStore = () => {
@@ -20,10 +20,14 @@ const [isPopUp, setPopUp] = useState<boolean>(false)
 const [productList, setProductList] = React.useState<coinbaseProducts[] | undefined>(undefined)
 const [searchKey, setSearchKey] = useState<string>("")
 const [searchResult, setSearchResult] = useState<coinbaseProducts[] | undefined>(undefined)
-const [isFavourite, setIsFavourite] = useState<boolean>(false)
 const [favList, setFavList] = useState<FavToggle [] | undefined>(undefined)
 const [currentUser, setCurrentUser] = useState<string>("")
-const [list, setList] = useState<favTicker [] | undefined>(undefined)
+
+// const favProductIDArray : string[] = [] 
+// const [favProductID, setFavProductID] = useState(favProductIDArray)
+// const [selectedProductID, setSelectedProductID] = useState<string>("")
+const [userFavList, setUserFavList] = useState<UserFavList [] | undefined>(undefined)
+
 
 const loginValidation = () => {
     if(enteredEmail === ""){
@@ -60,9 +64,10 @@ async function postData(url: string, body:any, tag: string){
         setIsError(!json.is_login)
         setErrorMsg(handleErrorMsg(json.error_msg))
         setIsLogin(json.is_login)
+        
         if(json.is_login){
-            setCurrentUser(json.id)
-            console.log("current user: ", currentUser)
+            const user: string = json.id
+            currentUserFavList(user)
         }   
         break 
         case "ticker":      
@@ -70,8 +75,12 @@ async function postData(url: string, body:any, tag: string){
             console.log(json)
             break
         case "favouriteToggle":
-            console.log("fav toggle: ", json)
-            setList(json)
+            setUserFavList(json)
+            // const newlist =favList?favList.concat(body):[body]
+            break
+        case "favouriteList":
+            setUserFavList(json)
+            console.log("current user fav list: ", json)
             break
     }
 }
@@ -85,7 +94,7 @@ const handleLogin = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     } else{
         setIsError(true)
         setErrorMsg("Invalid Email or Password")
-    }
+    } 
 }
 
 const handleSelectedProduct = (id:string) => {
@@ -101,11 +110,16 @@ const handleErrorMsg = (errorFlag: string) => {
             return "Incorrect password"
         case "Incorrect_Password_Format":
             return "Incorrect password format"
-            default: 
+        case "Add_Fav_Product_Error":
+            return "Error occured when adding product to favourites"
+        case "Remove_Fav_Product_Error":
+            return "Error occured when removing product from favourites"
+        case "Empty_Fav_Product_List":
+            return "No favourites"
+        default:
         return "An Unexpected Error Occured"
     }
 }
-
 
 const useFetchProducts = (url: string, options = {}) => {
     const [resp, setResp] = React.useState()
@@ -152,16 +166,26 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
 const handleSearch = (event: React.FormEvent<HTMLInputElement>) => {
    const input: string = event.currentTarget.value
     setSearchKey(input)    
-    setSearchResult(productList?productList.filter((result: coinbaseProducts)=> result.id.toLowerCase().includes(input.toLowerCase())):undefined)
+    setSearchResult(productList?productList.filter((result: coinbaseProducts)=> result.id.toLowerCase().includes(input.toLowerCase())):undefined)    
+}
+
+const handleFavIcon=(productID: string)=>{
+    const isfave =userFavList?userFavList.find(fav=>fav.ID===productID):undefined
+    console.log(isfave)
+    return isfave
 }
 
 const handleFavourite = (productID: string, userID: string) => {
-    setIsFavourite(!isFavourite)
-    const favToggle: FavToggle = {product_id: productID, user_id: userID,is_fav: !isFavourite}
-    console.log("selected product:",favToggle)
-    postData("http://localhost:8080/api/favToggle", favToggle, "favouriteToggle")  
+        const favToggle: FavToggle = {product_id: productID, user_id: userID}
+        postData("http://localhost:8080/api/favToggle", favToggle, "favouriteToggle")
+        currentUserFavList(favToggle.user_id)
 }
 
+const currentUserFavList = (id: string) =>{
+    const currentUserID: CurrentUserID = {user_id: id}
+    postData("http://localhost:8080/api/fav-list", currentUserID, "favouriteList")
+    setCurrentUser(id)
+}
 
 return {
     isSubmit,
@@ -185,10 +209,10 @@ return {
     searchKey,
     searchResult,
     handleFavourite,
-    isFavourite,
+    setCurrentUser,
     currentUser,
-    setList,
-    list
+    handleFavIcon,
+    userFavList
 }
 }
 

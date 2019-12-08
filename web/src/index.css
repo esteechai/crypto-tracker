@@ -12,9 +12,14 @@ code {
     monospace;
 }
 
-.input-feedback {
+.login-error {
   color: rgb(235, 54, 54);
   margin-top: 5px;
   font-size: 14px;
   margin-bottom: 20px;
+}
+
+.login-submit-error {
+  color: rgb(235, 54, 54);
+  height: 15px;
 }

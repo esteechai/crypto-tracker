@@ -17,3 +17,5 @@ var ViolateUNUsername = errors.New("Violate_UN_Username")
 var AddFavProductError = errors.New("Add_Fav_Product_Error")
 
 var RemoveFavProductError = errors.New("Remove_Fav_Product_Error")
+
+var EmptyFavProductList = errors.New("Empty_Fav_Product_List")

@@ -30,7 +30,7 @@ const CryptoList: React.FC<coinbaseProductsProps> = () => {
                                 </Modal>                                   
                             </span>
                         <span onClick={() => {store.handleFavourite(product.id, store.currentUser)}}>
-                            {store.isFavourite ? <i className="large red heart icon"></i> : <i className="large red heart outline icon" ></i> }
+                            {store.handleFavIcon(product.id) ? <i className="large red heart icon"></i> : <i className="large red heart outline icon" ></i> }
                         </span>     
                     </Card.Content>    
                 </Card>            

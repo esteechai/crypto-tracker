@@ -29,7 +29,7 @@ const NavBar: React.FC<Props> = () => {
                 </Menu.Item>
 
                 <Menu.Item>
-                    <NavLink to ="/">Favourites</NavLink>
+                    <NavLink to ="/FavCrypto">Favourites</NavLink>
                     </Menu.Item>
                 
             <Dropdown item icon="user"simple>

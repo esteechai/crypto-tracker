@@ -110,10 +110,15 @@ type UserFavDB struct {
 type UserFav struct {
 	UserID    string `json:"user_id"`
 	ProductID string `json:"product_id"`
-	isFav     bool   `json:"is_fav"`
+	IsFav     bool   `json:"is_fav"`
 }
 
-type UserFavResult struct {
-	QueryResult string `json:"result"`
-	IsSuccess   bool   `json:"is_success"`
+type FavProducts struct {
+	ID     string `db:"ticker_id"`
+	Price  string `db:"price"`
+	Size   string `db:"size"`
+	Time   string `db:"time"`
+	Bid    string `db:"bid"`
+	Ask    string `db:"ask"`
+	Volume string `db:"volume"`
 }

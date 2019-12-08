@@ -32,6 +32,7 @@ func (api *API) setupHttp() chi.Router {
 	r.Get("/api/get/products", api.ProductHandler)
 	r.Post("/api/ticker", api.TickerHandler)
 	r.Post("/api/favToggle", api.FavouriteHandler)
+	r.Post("/api/fav-list", api.FavouriteListHandler)
 	fmt.Println("Successfully connected!")
 	return r
 }
@@ -180,7 +181,6 @@ type CoinID struct {
 
 func (api *API) TickerHandler(w http.ResponseWriter, r *http.Request) {
 	var id CoinID
-	fmt.Println("api controller: ", id)
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&id)
 	if err != nil {
@@ -197,31 +197,36 @@ func (api *API) TickerHandler(w http.ResponseWriter, r *http.Request) {
 
 func (api *API) FavouriteHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	passback := &UserFavResult{QueryResult: "", IsSuccess: false}
 
-	var userFav *UserFav
+	var userFav UserFav
 	decoder := json.NewDecoder(r.Body)
 	err := decoder.Decode(&userFav)
 	if err != nil {
 		fmt.Println(err)
 	}
+	result, err := api.DB.CheckFav(userFav.UserID, userFav.ProductID)
+	json.NewEncoder(w).Encode(result)
+	return
+}
 
-	if userFav.isFav {
-		err := api.DB.RemoveFav(userFav.UserID, userFav.ProductID)
-		if err != nil {
-			fmt.Println(err)
-			passback = &UserFavResult{QueryResult: err.Error(), IsSuccess: false}
-			return
-		}
-	} else {
-		err := api.DB.AddFav(userFav.UserID, userFav.ProductID)
-		if err != nil {
-			fmt.Println(err)
-			passback = &UserFavResult{QueryResult: err.Error(), IsSuccess: false}
-			return
-		}
+type UserID struct {
+	ID string `json:"user_id"`
+}
+
+func (api *API) FavouriteListHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var id UserID
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&id)
+	if err != nil {
+		fmt.Println(err)
 	}
-	passback = &UserFavResult{QueryResult: "", IsSuccess: true}
-	json.NewEncoder(w).Encode(passback)
+	fmt.Println("api controller current user id: ", id)
+
+	result, err := api.DB.GetFavProducts(id.ID)
+	if err != nil {
+		return
+	}
+	json.NewEncoder(w).Encode(result)
 	return
 }
