@@ -21,5 +21,5 @@ func validatePassword(password string) error {
 		return nil
 	}
 
-	return IncorrectPasswordFormat
+	return WeakPassword
 }

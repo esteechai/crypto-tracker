@@ -16,7 +16,7 @@ func (d *DBDriver) Login(email string, password string) (string, error) {
 
 	if err != nil {
 		fmt.Println(err)
-		return "", BadRequestError
+		return "", InvalidEmailOrPassword
 	}
 
 	if err == sql.ErrNoRows {
@@ -33,14 +33,14 @@ func (d *DBDriver) Login(email string, password string) (string, error) {
 	err = bcrypt.CompareHashAndPassword(data.PasswordHash, []byte(password))
 	if err != nil {
 		fmt.Println(err, data.PasswordHash, []byte(password))
-		return "", IncorrectPasswordFormat
+		return "", IncorrectPassword
 	}
-
 	return data.ID, nil
 }
 
 //signup
 func (d *DBDriver) Signup(username string, email string, password string) (bool, error) {
+
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		fmt.Println(err)
@@ -78,13 +78,29 @@ func (d *DBDriver) Signup(username string, email string, password string) (bool,
 		"ResetPassToken":    passToken,
 	})
 
-	fmt.Println(err)
-
 	if err != nil {
+		if IsUniqueConstraintError(err, UniqueConstraintUsername) {
+			fmt.Println("violate username uq")
+			return false, ViolateUNUsername
+		}
+		if IsUniqueConstraintError(err, UniqueConstraintEmail) {
+			fmt.Println("violate email uq")
+			return false, ViolateUNEmail
+		}
 		return false, err
 	}
-
 	return true, nil
+}
+
+//get user's verification token after signup
+func (d *DBDriver) GetVerifToken(username string, email string) (string, error) {
+	var verifToken string
+	err := d.Conn.Get(&verifToken, `SELECT verification_token FROM users WHERE username=$1 AND email=$2`, username, email)
+
+	if err != nil {
+		return "", BadRequestError
+	}
+	return verifToken, nil
 }
 
 func (d *DBDriver) UpdateTicker(tickerData *TickerData) {
@@ -211,6 +227,51 @@ func (d *DBDriver) GetFavProducts(id string) (*[]FavProducts, error) {
 		fmt.Println(err)
 		return nil, err
 	}
-
 	return data, nil
+}
+
+//set user's verification bool to true
+func (d *DBDriver) VerifyUserAcc(veriToken string) error {
+	query := `UPDATE users SET verification = true WHERE verification_token = :VerificationToken`
+	_, err := d.Conn.NamedExec(query, map[string]interface{}{
+		"VerificationToken": veriToken,
+	})
+
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *DBDriver) ResetPassword(userID string, currentPw string, newPw string) error {
+	var pw []byte
+	err := d.Conn.Get(&pw, `SELECT password_hash FROM users WHERE id=$1`, userID)
+	if err != nil {
+		fmt.Println(err)
+		return BadRequestError
+	}
+
+	err = bcrypt.CompareHashAndPassword(pw, []byte(currentPw))
+	if err != nil {
+		fmt.Println(err)
+		return PasswordMatchingIssue
+	}
+
+	newPwHash, err := bcrypt.GenerateFromPassword([]byte(newPw), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("this error: ", err)
+		return ResetPasswordError
+	}
+
+	query := `UPDATE users SET password_hash = :NewPassword WHERE id = :UserID`
+	_, err = d.Conn.NamedExec(query, map[string]interface{}{
+		"NewPassword": newPwHash,
+		"UserID":      userID,
+	})
+	if err != nil {
+		fmt.Println("this : ", err)
+
+		return ResetPasswordError
+	}
+	return nil
 }

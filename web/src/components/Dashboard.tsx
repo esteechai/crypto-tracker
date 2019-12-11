@@ -1,15 +1,17 @@
 import React from 'react'
 import { StoreContainer } from '../store'
+import { Redirect } from 'react-router'
 
-interface Props{}
+interface DashboardProps {
+}
 
-const Dashboard: React.FC<Props> = () => {
-    const store = StoreContainer.useContainer()
+const Dashboard: React.FC<DashboardProps> = () => {
+    const store = StoreContainer.useContainer() 
+    if (!store.isLogin){
+        return <Redirect to= '/LoginForm' />
+    }
     return (
-        <div>
-            <p>You're logged in</p>
-            
-        </div>
+        <div></div>
     )
 }
 

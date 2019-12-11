@@ -8,7 +8,6 @@ import {StoreContainer} from "./store"
 
 ReactDOM.render(
 <StoreContainer.Provider>
-
 <App />
 </StoreContainer.Provider>
 , document.getElementById('root'));

@@ -10,6 +10,9 @@ interface coinbaseProductsProps {
 
 const CryptoList: React.FC<coinbaseProductsProps> = () => {
     const store = StoreContainer.useContainer()
+    if (!store.isLogin){
+        return <Redirect to= '/LoginForm' />
+    }
        return (
         <Card.Group>
             {store.searchResult?store.searchResult.map((product:coinbaseProducts)=>{

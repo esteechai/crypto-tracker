@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
+	"text/template"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -31,10 +33,38 @@ func (api *API) setupHttp() chi.Router {
 	r.Post("/api/signup", api.SignupHandler)
 	r.Get("/api/get/products", api.ProductHandler)
 	r.Post("/api/ticker", api.TickerHandler)
-	r.Post("/api/favToggle", api.FavouriteHandler)
+	r.Post("/api/fav-toggle", api.FavouriteHandler)
 	r.Post("/api/fav-list", api.FavouriteListHandler)
+	r.Get("/api/confirm-email/{veriToken}", api.ConfirmEmailHandler)
+	r.Post("/api/reset-password", api.ResetPasswordHandler)
 	fmt.Println("Successfully connected!")
 	return r
+}
+
+//handle signup verification token
+func (api *API) ConfirmEmailHandler(w http.ResponseWriter, r *http.Request) {
+	veriToken := strings.ToLower(chi.URLParam(r, "veriToken"))
+	if veriToken != "" {
+		err := api.DB.VerifyUserAcc(veriToken)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+	fmt.Println("verification successful")
+
+	t, err := template.ParseFiles("template/verifiedEmail.html")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = t.Execute(w, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	return
 }
 
 //handle login validation
@@ -89,21 +119,27 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	result, err := api.DB.Signup(userSignUpData.Username, userSignUpData.Email, userSignUpData.Password)
 	if err != nil {
-		result = false
-		if IsUniqueConstraintError(err, UniqueConstraintUsername) {
-			passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-		}
-		if IsUniqueConstraintError(err, UniqueConstraintEmail) {
-			passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-		}
+		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
 		return
 	}
 
-	passback = &SignupResult{IsSignup: true, ErrorMsg: ""}
+	verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
+	if err != nil {
+		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
+	err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
+	if err != nil {
+		fmt.Println(err)
+		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
 	json.NewEncoder(w).Encode(passback)
-
-	fmt.Println("passback: ", passback)
-
 	return
 }
 
@@ -221,12 +257,49 @@ func (api *API) FavouriteListHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	fmt.Println("api controller current user id: ", id)
+	// fmt.Println("api controller current user id: ", id)
 
 	result, err := api.DB.GetFavProducts(id.ID)
 	if err != nil {
 		return
 	}
 	json.NewEncoder(w).Encode(result)
+	return
+}
+
+//handle reset password
+func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	passback := &ResponseResult{Success: true, ErrorMsg: ""}
+	var resetPass ResetPass
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&resetPass)
+	if err != nil {
+		fmt.Println(err)
+		passback = &ResponseResult{Success: false, ErrorMsg: BadRequestError.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
+	if resetPass.CurrentPw == resetPass.NewPw {
+		passback = &ResponseResult{Success: false, ErrorMsg: SameResetPwInput.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
+	err = validatePassword(resetPass.NewPw)
+	if err != nil {
+		passback = &ResponseResult{Success: false, ErrorMsg: WeakPassword.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
+	err = api.DB.ResetPassword(resetPass.UserID, resetPass.CurrentPw, resetPass.NewPw)
+	if err != nil {
+		passback := &ResponseResult{Success: false, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+	json.NewEncoder(w).Encode(passback)
 	return
 }

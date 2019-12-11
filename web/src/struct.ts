@@ -1,7 +1,13 @@
-export interface AuthenticateData {
+export interface AuthenticateUserSignin {
     email: string 
     password: string 
     isSubmit: boolean 
+}
+
+export interface AuthenticateUserSignup {
+    username: string 
+    email: string 
+    password: string 
 }
 
 export interface coinbaseProducts {
@@ -49,11 +55,16 @@ export interface UserFavList {
 export interface FavToggle {
     user_id: string 
     product_id: string
-  
 }
 
 export interface CurrentUserID {
     user_id: string 
+}
+
+export interface ResetPasword {
+    user_id: string 
+    current_password: string 
+    new_password: string 
 }
 
 

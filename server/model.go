@@ -7,7 +7,8 @@ type DBDriver struct {
 }
 
 type API struct {
-	DB *DBDriver
+	DB        *DBDriver
+	EmailInfo *SendEmailInfo
 }
 
 //user input on login
@@ -121,4 +122,17 @@ type FavProducts struct {
 	Bid    string `db:"bid"`
 	Ask    string `db:"ask"`
 	Volume string `db:"volume"`
+}
+
+type SendEmailInfo struct {
+	EmailAPIKey  string
+	EmailDomain  string
+	Scheme       string
+	ServerDomain string
+}
+
+type ResetPass struct {
+	UserID    string `json:"user_id"`
+	CurrentPw string `json:"current_password"`
+	NewPw     string `json:"new_password"`
 }

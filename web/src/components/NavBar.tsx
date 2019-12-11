@@ -1,18 +1,17 @@
 import React from 'react'
 import { StoreContainer } from '../store'
-import { Menu, Input, Search, Dropdown, Icon } from 'semantic-ui-react'
-import { NavLink } from 'react-router-dom'
+import { Menu, Input, Search, Dropdown, Confirm } from 'semantic-ui-react'
+import { NavLink, Link } from 'react-router-dom'
 interface Props {}
 
 const NavBar: React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
     return (
-        <div> 
+        <div className="navbar"> 
             <Menu attached="top" tabular> 
                 <Menu.Item 
-                    name="Cypto Tracker"
+                    name="Cyrpto Tracker"
                 />
-
                 <Menu.Item>
                     <div className="ui icon input">
                         <Input type="text "
@@ -24,7 +23,7 @@ const NavBar: React.FC<Props> = () => {
                     </div>          
                 </Menu.Item>
                 <Menu.Menu position="right">
-                <Menu.Item>
+                <Menu.Item name="Cryptocurrency">
                     <NavLink to ="/CryptoList">Cryptocurrency</NavLink>
                 </Menu.Item>
 
@@ -34,16 +33,21 @@ const NavBar: React.FC<Props> = () => {
                 
             <Dropdown item icon="user"simple>
                 <Dropdown.Menu>
-                    <Dropdown.Item>Logout</Dropdown.Item>
+                    <Dropdown.Item onClick={store.handleLogoutMsg}>Logout</Dropdown.Item>
+                    <Confirm 
+                        open={store.openLogoutMsg}
+                        content ="Are you sure you want to logout?"
+                        onCancel={store.CancelLogout}
+                        onConfirm={store.ConfirmLogout}
+                    />
                     <Dropdown.Divider />
-                    <Dropdown.Item>Reset Password</Dropdown.Item>
+                    <Dropdown.Item><NavLink to = "/ResetPassword" >Reset Password</NavLink></Dropdown.Item>
                 </Dropdown.Menu>
             </Dropdown>
             </Menu.Menu> 
             </Menu>
-        </div>
+         </div>
     )
-
 }
 
 export default NavBar

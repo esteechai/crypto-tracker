@@ -12,45 +12,53 @@ const LoginForm: React.FC<Props> = () => {
        // console.log("sucessfully login")
        return <Redirect to= '/CryptoList' />
     }
-
+    
     store.useFetchProducts("http://localhost:8080/api/get/products")
     
 return(
+    <div className="login-signup-container">
    <Container className="ui grid" style={{backgroundColor: ''}} textAlign="center">
            <Grid verticalAlign="middle">                       
              <Grid.Column style={{width:450}}>                      
                 <form className="ui form">
                     <Segment stacked>
                         <h2> Login</h2>
-                            <div className={"login-submit-error" + (store.isError && store.errorMsg ? 'has-error' : '')}>            
+                            <div className={"login-submit-error" + (store.isError && store.errorMsg ? 'login-input-error' : '')}>            
                                 {store.isError && store.errorMsg &&
                                     <p className="login-error">{store.errorMsg}</p>}      
                             </div>
+                            <div className="login-signup-form">
+                                <Container textAlign="left">
+                                    <div className={'field' + (store.isSubmit && !store.enteredEmail ? 'login-input-error' : '')}>
+                                    <label><b>Email Address</b></label>
+                                        <input placeholder="Email Address" id="email" value={store.enteredEmail} onChange={store.handleEnteredEmail} />
+                                        {store.isSubmit && !store.enteredEmail && 
+                                            <div className="login-error"> Email is required </div>}
+                                    </div>
+                                </Container>
+                            </div>
 
-                          
-                            <div className={'field' + (store.isSubmit && !store.enteredEmail ? 'has-error' : '')}>
-                            <label><b>Email Address</b></label>
-                                <input placeholder="Email Address" id="email" value={store.enteredEmail} onChange={store.handleEnteredEmail} />
-                                {store.isSubmit && !store.enteredEmail && 
-                                    <div className="login-error"> Email is required </div>}
+                            <div className="login-signup-form">
+                                <Container textAlign="left">
+                                    <div className={'field' + (store.isSubmit && !store.enteredPassword ? 'login-input-error' : '')}>
+                                        <Container textAlign="left"><b>Password</b></Container>
+                                    <input placeholder="Password" id="password" type="password" value={store.enteredPassword} onChange={store.handleEnteredPassword}/>
+                                    {store.isSubmit && !store.enteredPassword && 
+                                        <div className="login-error"> Password is required </div>}
+                                    </div>
+                                </Container>
                             </div>
-                
-                            <div className={'field' + (store.isSubmit && !store.enteredPassword ? 'has-error' : '')}>
-                                <label><b>Password</b></label>
-                            <input placeholder="Password" id="password" type="password" value={store.enteredPassword} onChange={store.handleEnteredPassword}/>
-                            {store.isSubmit && !store.enteredPassword && 
-                                <div className="login-error"> Password is required </div>}
-                            </div>
-                
+
                             <button type="submit" className="ui primary button" onClick={store.handleLogin}>Log in</button>
                             <p><Link to = "/">Forgot password?</Link></p>
-                            <p>Don't have an account yet?   <Link to="/SignupForm">Signup</Link> </p>
+                            <p>Don't have an account yet?<Link to="/SignupForm">Signup</Link> </p>
                             
                     </Segment>
                 </form>
          </Grid.Column>
          </Grid>
     </Container> 
+    </div>
 )
 }
 
