@@ -136,3 +136,12 @@ type ResetPass struct {
 	CurrentPw string `json:"current_password"`
 	NewPw     string `json:"new_password"`
 }
+
+type ForgotPass struct {
+	Email string `json:"email"`
+}
+
+type ResetPassTokenResult struct {
+	ResetPassToken string `db:"reset_pass_token"`
+	ErrorMsg       string `json:"error_msg"`
+}

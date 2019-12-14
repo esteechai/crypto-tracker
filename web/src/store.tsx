@@ -1,10 +1,6 @@
 import React, {useState} from 'react'
 import {createContainer} from 'unstated-next'
-import { create } from 'domain'
-import {AuthenticateUserSignin, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, UserFavList, CurrentUserID, AuthenticateUserSignup, ResetPasword} from "./struct"
-import { string } from 'prop-types'
-import { Redirect } from 'react-router'
-import ResetPassword from './components/ResetPassword'
+import {AuthenticateUserSignin, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, UserFavList, CurrentUserID, AuthenticateUserSignup, ResetPasword, ForgotPasword} from "./struct"
 
 export const useStore = () => {
 
@@ -28,8 +24,39 @@ const [currentUser, setCurrentUser] = useState<string>("")
 const [userFavList, setUserFavList] = useState<UserFavList [] | undefined>(undefined)
 const [openLogoutMsg, setOpenLogoutMsg] = useState<boolean>(false)
 // const [navBarActiveItem, setNavBarActiveItem] = useState<string>("")
-const [enteredCurrentPw, setEnteredCurrenPw] = useState<string>("")
+const [enteredCurrentPw, setEnteredCurrentPw] = useState<string>("")
 const [enteredNewPw, setEnteredNewPw] = useState<string>("")
+const [successMsg, setSuccesMsg] = useState<string>("")
+
+//reset Login & Signup form input
+const ResetFormInput = () => {
+    setIsSubmit(false)
+    setErrorMsg("")
+    setSuccesMsg("")
+    setEnteredUsername("")
+    setEnteredEmail("")
+    setEnteredPassword("")
+    setEnteredCurrentPw("")
+    setEnteredNewPw("")
+}
+
+//reset Reset Password Form input 
+const ResetResetPwInput = () => {
+    setIsSubmit(false)
+    setIsError(false)
+    setEnteredCurrentPw("")
+    setEnteredNewPw("")
+    setErrorMsg("")
+    setSuccesMsg("")
+}
+
+//reset Forgot Password Form input 
+const ResetForgotPassInput = () => {
+    setIsSubmit(false)
+    setIsError(false)
+    setEnteredEmail("")    
+}
+
 
 const loginValidation = () => {
     if(enteredEmail === ""){
@@ -104,22 +131,42 @@ async function postData(url: string, body:any, tag: string){
             // console.log("current user fav list: ", json)
             break
         case "signup": 
-            setIsError(!json.is_signup)
-            setErrorMsg(handleErrorMsg(json.error_msg))
+            if(json.is_signup === false){
+                setIsError(!json.is_signup)
+                setErrorMsg(handleErrorMsg(json.error_msg))
+            }
+            else{
+                setIsError(true)
+                setSuccesMsg("A verification link has been sent to your email. Please check your email and confirm your email address.")
+                console.log("sucess msg here")
+            }
             break
         case "resetPassword":
             setIsError(!json.success)
             if(json.success){
-                setEnteredCurrenPw("")
+                setEnteredCurrentPw("")
                 setEnteredNewPw("")
+                setSuccesMsg("Your password has been reset")
+            } else{
+                 setIsError(!json.success)
+                 setErrorMsg(handleErrorMsg(json.error_msg))
             }
-            setErrorMsg(handleErrorMsg(json.error_msg))
-
+            break
+        case "forgotPassword":
+            console.log(json.error_msg)
+            if (json.error_msg != ""){
+                setIsError(true)
+                setErrorMsg(handleErrorMsg(json.error_msg))    
+            } else {
+                setIsError(false)
+                setSuccesMsg("A confirmation email has been sent ")
+            }
             break
     }
 }
 
 const handleLogin = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    setErrorMsg("")
     setIsSubmit(true)
     event.preventDefault()
     if(loginValidation()){
@@ -127,7 +174,6 @@ const handleLogin = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         postData("http://localhost:8080/api/login", authenticateUserSignin, "login")
     } else{
         setIsError(true)
-        // setErrorMsg("Invalid Email or Password")
     } 
 }
 
@@ -175,7 +221,9 @@ const handleErrorMsg = (errorFlag: string) => {
             return "Unexpected error occured on reset password"
         case "Same_Reset_Password_Input":
             return "Your new password cannot be the same as current password"
-        default:
+        case "Request_Reset_Pass_Token_Error":
+            return "There's no email address found in our database. Please try again."
+        default: 
         return "An Unexpected Error Occured"
     }
 }
@@ -258,10 +306,12 @@ const CancelLogout = () => {
 const ConfirmLogout = () => {
     console.log("confirm logout")
     setOpenLogoutMsg(false)
+    ResetFormInput()
+    ResetResetPwInput()
     setIsLogin(false)
 }
 
-const handleEnteredCurrentPw = (event:React.FormEvent<HTMLInputElement>) => setEnteredCurrenPw (event.currentTarget.value)
+const handleEnteredCurrentPw = (event:React.FormEvent<HTMLInputElement>) => setEnteredCurrentPw (event.currentTarget.value)
 const handleEnteredNewPw = (event:React.FormEvent<HTMLInputElement>) => setEnteredNewPw(event.currentTarget.value)
 
 const handleResetPassword = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
@@ -269,11 +319,25 @@ const handleResetPassword = (event:React.MouseEvent<HTMLButtonElement, MouseEven
     event.preventDefault()
     if(resetPwValidation()){
         const resetPassword: ResetPasword={user_id: currentUser, current_password: enteredCurrentPw, new_password:enteredNewPw}
-        postData("http://localhost:8080/api/reset-password", resetPassword, "resetPassword")
+        postData("http://localhost:8080/api/reset-password", resetPassword, "resetPassword") 
     } else {
         setIsError(true)
     }
 }   
+
+const HandleForgotPassword = () => {
+    setIsSubmit(true)
+    // setErrorMsg("")
+    console.log("forgot pass email:", enteredEmail)
+    if (enteredEmail != ""){
+        const forgotPassword : ForgotPasword={email: enteredEmail}
+        postData("http://localhost:8080/api/forgot-password", forgotPassword, "forgotPassword")
+    } else {
+        setIsError(true)
+    }
+    
+//    ResetForgotPassInput() 
+}
 
 return {
     setIsSubmit,
@@ -314,7 +378,12 @@ return {
     enteredCurrentPw,
     enteredNewPw,
     handleEnteredCurrentPw,
-    handleEnteredNewPw    
+    handleEnteredNewPw,
+    ResetFormInput,
+    successMsg,
+    ResetResetPwInput,
+    ResetForgotPassInput,
+    HandleForgotPassword,
 }
 }
 

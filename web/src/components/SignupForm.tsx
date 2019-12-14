@@ -16,10 +16,13 @@ const SignupForm : React.FC<Props> = () => {
              <form className="ui form">
                  <Segment stacked>
                      <h2> Signup</h2>
-                         <div className={"login-submit-error" + (store.isError && store.errorMsg ? 'login-input-error' : '')}>            
+                         {/* <div className={"login-submit-error" + (store.isError && store.errorMsg ? 'login-input-error' : '')}>            
                              {store.isError && store.errorMsg &&
                                  <p className="login-error">{store.errorMsg}</p>}      
-                         </div>
+                         </div> */}
+                           {(store.isError && store.errorMsg && store.isSubmit) ?
+                      <div className="login-error"><i className="times circle outline icon"></i>{store.errorMsg}</div> : 
+                        <div className="success-msg"><i className="check circle icon"></i>{store.successMsg}</div>}  
                         
                          <div className="login-signup-form">
                              <Container textAlign="left">
@@ -27,7 +30,7 @@ const SignupForm : React.FC<Props> = () => {
                                  <label><b>Username</b></label>
                                      <input placeholder="Email Address" id="email" value={store.enteredUsername} onChange={store.handleEnteredUsername} />
                                      {store.isSubmit && !store.enteredUsername && 
-                                         <div className="login-error"> Username is required </div>}
+                                         <div className="login-error"> Required </div>}
                                  </div>
                              </Container>
                          </div>
@@ -38,7 +41,7 @@ const SignupForm : React.FC<Props> = () => {
                                  <label><b>Email Address</b></label>
                                      <input placeholder="Email Address" id="email" value={store.enteredEmail} onChange={store.handleEnteredEmail} />
                                      {store.isSubmit && !store.enteredEmail && 
-                                         <div className="login-error"> Email is required </div>}
+                                         <div className="login-error"> Required </div>}
                                  </div>
                              </Container>
                          </div>
@@ -49,22 +52,18 @@ const SignupForm : React.FC<Props> = () => {
                                      <Container textAlign="left"><b>Password</b></Container>
                                  <input placeholder="Password" id="password" type="password" value={store.enteredPassword} onChange={store.handleEnteredPassword}/>
                                  {store.isSubmit && !store.enteredPassword && 
-                                     <div className="login-error"> Password is required </div>}
+                                     <div className="login-error"> Required </div>}
                                  </div>
                              </Container>
                          </div>
-
                          <button type="submit" className="ui primary button" onClick={store.handleSignup}>Signup</button>
-                         <p>Got an account?   <Link to="/LoginForm">Login</Link> </p>
-                         
+                         <p>Got an account?   <Link to="/LoginForm" onClick={store.ResetFormInput}>Login</Link> </p>
                  </Segment>
              </form>
-      </Grid.Column>
-      </Grid>
- </Container>
- </div> 
+        </Grid.Column>
+        </Grid>
+    </Container>
+    </div> 
     )
-
 }
-
 export default SignupForm

@@ -33,3 +33,5 @@ var WeakPassword = errors.New("Weak_Password")
 var ResetPasswordError = errors.New("Reset_Password_Error")
 
 var SameResetPwInput = errors.New("Same_Reset_Password_Input")
+
+var RequestResetPassTokenError = errors.New("Request_Reset_Pass_Token_Error")

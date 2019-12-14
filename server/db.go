@@ -275,3 +275,16 @@ func (d *DBDriver) ResetPassword(userID string, currentPw string, newPw string) 
 	}
 	return nil
 }
+
+func (d *DBDriver) GetResetPassToken(email string) (string, error) {
+	var token string
+	err := d.Conn.Get(&token, `SELECT reset_pass_token FROM users WHERE email=$1`, email)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", RequestResetPassTokenError
+		}
+		fmt.Println(err)
+		return "", BadRequestError
+	}
+	return token, nil
+}

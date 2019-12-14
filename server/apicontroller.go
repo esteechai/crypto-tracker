@@ -37,6 +37,7 @@ func (api *API) setupHttp() chi.Router {
 	r.Post("/api/fav-list", api.FavouriteListHandler)
 	r.Get("/api/confirm-email/{veriToken}", api.ConfirmEmailHandler)
 	r.Post("/api/reset-password", api.ResetPasswordHandler)
+	r.Post("/api/forgot-password", api.VerifyForgotPasswordEmail)
 	fmt.Println("Successfully connected!")
 	return r
 }
@@ -124,20 +125,20 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
-	if err != nil {
-		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-		json.NewEncoder(w).Encode(passback)
-		return
-	}
+	// verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
+	// if err != nil {
+	// 	passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+	// 	json.NewEncoder(w).Encode(passback)
+	// 	return
+	// }
 
-	err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
-	if err != nil {
-		fmt.Println(err)
-		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-		json.NewEncoder(w).Encode(passback)
-		return
-	}
+	// err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+	// 	json.NewEncoder(w).Encode(passback)
+	// 	return
+	// }
 
 	json.NewEncoder(w).Encode(passback)
 	return
@@ -300,6 +301,31 @@ func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
+	json.NewEncoder(w).Encode(passback)
+	return
+}
+
+func (api *API) VerifyForgotPasswordEmail(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	passback := &ResetPassTokenResult{ResetPassToken: "", ErrorMsg: ""}
+	var email ForgotPass
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&email)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	token, err := api.DB.GetResetPassToken(email.Email)
+	if err != nil {
+		passback = &ResetPassTokenResult{ResetPassToken: "", ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
+	passback = &ResetPassTokenResult{ResetPassToken: token, ErrorMsg: ""}
 	json.NewEncoder(w).Encode(passback)
 	return
 }

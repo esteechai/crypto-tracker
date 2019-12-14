@@ -67,4 +67,10 @@ export interface ResetPasword {
     new_password: string 
 }
 
+export interface ForgotPasword {
+    email: string 
+}
+
+
+
 

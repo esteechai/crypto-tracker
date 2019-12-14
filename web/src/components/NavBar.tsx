@@ -41,7 +41,7 @@ const NavBar: React.FC<Props> = () => {
                         onConfirm={store.ConfirmLogout}
                     />
                     <Dropdown.Divider />
-                    <Dropdown.Item><NavLink to = "/ResetPassword" >Reset Password</NavLink></Dropdown.Item>
+                    <Dropdown.Item><NavLink to = "/ResetPassword" onClick={store.ResetResetPwInput}>Reset Password</NavLink></Dropdown.Item>
                 </Dropdown.Menu>
             </Dropdown>
             </Menu.Menu> 
