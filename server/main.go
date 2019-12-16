@@ -20,8 +20,8 @@ const (
 func main() {
 	Scheme := flag.String("scheme", "http", "scheme for http or https")
 	ServerDomain := flag.String("server-domain", "localhost:8080", "server domain name")
-	EmailAPIKey := flag.String("email-api-key", "9afc1023d18b6f5ffd4f9a6da6a7cce5-5645b1f9-7004f18a", "api key for sending email")
-	EmailDomain := flag.String("email-domain", "sandbox46b550a5b410473e985b1c64e7525ea1.mailgun.org", "domain name for sending email")
+	EmailAPIKey := flag.String("email-api-key", "1f1faefbc512e382465fe0c5031334a1-f8b3d330-a01f2943", "api key for sending email")
+	EmailDomain := flag.String("email-domain", "sandbox780aae9321c242b999909e946d7d9f5b.mailgun.org", "domain name for sending email")
 
 	flag.Parse()
 

@@ -27,6 +27,7 @@ const [openLogoutMsg, setOpenLogoutMsg] = useState<boolean>(false)
 const [enteredCurrentPw, setEnteredCurrentPw] = useState<string>("")
 const [enteredNewPw, setEnteredNewPw] = useState<string>("")
 const [successMsg, setSuccesMsg] = useState<string>("")
+const [verifiedEmail, setVerifiedEmail] = useState<boolean>(false) 
 
 //reset Login & Signup form input
 const ResetFormInput = () => {
@@ -38,6 +39,7 @@ const ResetFormInput = () => {
     setEnteredPassword("")
     setEnteredCurrentPw("")
     setEnteredNewPw("")
+    setVerifiedEmail(false)
 }
 
 //reset Reset Password Form input 
@@ -52,6 +54,7 @@ const ResetResetPwInput = () => {
 
 //reset Forgot Password Form input 
 const ResetForgotPassInput = () => {
+    setVerifiedEmail(false)
     setIsSubmit(false)
     setIsError(false)
     setEnteredEmail("")    
@@ -158,8 +161,9 @@ async function postData(url: string, body:any, tag: string){
                 setIsError(true)
                 setErrorMsg(handleErrorMsg(json.error_msg))    
             } else {
+                setVerifiedEmail(true)
                 setIsError(false)
-                setSuccesMsg("A confirmation email has been sent ")
+                // setSuccesMsg("A confirmation email has been sent ")
             }
             break
     }
@@ -223,6 +227,8 @@ const handleErrorMsg = (errorFlag: string) => {
             return "Your new password cannot be the same as current password"
         case "Request_Reset_Pass_Token_Error":
             return "There's no email address found in our database. Please try again."
+        case "DB_Query_Error":
+            return "Requested data does not exist"
         default: 
         return "An Unexpected Error Occured"
     }
@@ -384,6 +390,7 @@ return {
     ResetResetPwInput,
     ResetForgotPassInput,
     HandleForgotPassword,
+    verifiedEmail
 }
 }
 

@@ -288,3 +288,45 @@ func (d *DBDriver) GetResetPassToken(email string) (string, error) {
 	}
 	return token, nil
 }
+
+func (d *DBDriver) UpdatePassWToken(resetPassToken string, password string) error {
+	var userID string
+
+	//get user_id
+	err := d.Conn.Get(&userID, `SELECT id FROM users WHERE reset_pass_token=$1`, resetPassToken)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return DbQueryError
+		}
+		fmt.Println(err)
+		return BadRequestError
+	}
+
+	//hash new password
+	newPwHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		fmt.Println("this error: ", err)
+		return ResetPasswordError
+	}
+
+	//generate new reset password token
+	newToken, err := uuid.NewV4()
+	if err != nil {
+		log.Fatalf("failed to generate new reset password token: %v", err)
+	}
+	new_token := newToken.String()
+
+	//update new password hash and new reset password token
+	query := `UPDATE users SET password_hash = :NewPassword, reset_pass_token = :NewToken WHERE id = :UserID`
+	_, err = d.Conn.NamedExec(query, map[string]interface{}{
+		"NewPassword": newPwHash,
+		"NewToken":    new_token,
+		"UserID":      userID,
+	})
+	if err != nil {
+		fmt.Println("this : ", err)
+
+		return ResetPasswordError
+	}
+	return nil
+}

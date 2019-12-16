@@ -37,7 +37,9 @@ func (api *API) setupHttp() chi.Router {
 	r.Post("/api/fav-list", api.FavouriteListHandler)
 	r.Get("/api/confirm-email/{veriToken}", api.ConfirmEmailHandler)
 	r.Post("/api/reset-password", api.ResetPasswordHandler)
-	r.Post("/api/forgot-password", api.VerifyForgotPasswordEmail)
+	r.Post("/api/forgot-password", api.ForgotPasswordHandler)
+	r.Get("/api/reset-password/{resetPassToken}", api.ResetPassWTokenHandler)
+	r.Post("/api/update-password/{resetPassToken}", api.UpdatePassWTokenHandler)
 	fmt.Println("Successfully connected!")
 	return r
 }
@@ -52,7 +54,7 @@ func (api *API) ConfirmEmailHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	fmt.Println("verification successful")
+	fmt.Println("email verification successful")
 
 	t, err := template.ParseFiles("template/verifiedEmail.html")
 	if err != nil {
@@ -125,20 +127,20 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
-	// if err != nil {
-	// 	passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-	// 	json.NewEncoder(w).Encode(passback)
-	// 	return
-	// }
+	verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
+	if err != nil {
+		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
 
-	// err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-	// 	json.NewEncoder(w).Encode(passback)
-	// 	return
-	// }
+	err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
+	if err != nil {
+		fmt.Println(err)
+		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
 
 	json.NewEncoder(w).Encode(passback)
 	return
@@ -305,7 +307,7 @@ func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (api *API) VerifyForgotPasswordEmail(w http.ResponseWriter, r *http.Request) {
+func (api *API) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	passback := &ResetPassTokenResult{ResetPassToken: "", ErrorMsg: ""}
 	var email ForgotPass
@@ -325,7 +327,97 @@ func (api *API) VerifyForgotPasswordEmail(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	err = api.EmailInfo.ResetPassword(email.Email, token)
+	if err != nil {
+		fmt.Println(err)
+		passback = &ResetPassTokenResult{ResetPassToken: "", ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
 	passback = &ResetPassTokenResult{ResetPassToken: token, ErrorMsg: ""}
 	json.NewEncoder(w).Encode(passback)
+	return
+}
+
+//handle password reset with token
+func (api *API) ResetPassWTokenHandler(w http.ResponseWriter, r *http.Request) {
+	resetPassToken := strings.ToLower(chi.URLParam(r, "resetPassToken"))
+	passback := &ForgotPassReset{ResetPassToken: resetPassToken, NewPassword: ""}
+	t, err := template.ParseFiles("template/resetPassword.html")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = t.Execute(w, passback)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	return
+}
+
+//validate password input on forgot password
+func (api *API) UpdatePassWTokenHandler(w http.ResponseWriter, r *http.Request) {
+	resetPassToken := strings.ToLower(chi.URLParam(r, "resetPassToken"))
+	newPassword := r.FormValue("newPw")
+	confirmPassword := r.FormValue("confirmPw")
+	t, err := template.ParseFiles("template/resetPasswordError.html")
+	passback := ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: ""}
+	// fmt.Println("forgot pw: ", newPassword, confirmPassword)
+
+	if newPassword == "" || confirmPassword == "" {
+		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "Please enter both new and confirm password."}
+		err = t.Execute(w, passback)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		return
+	}
+
+	//check whether both password input matches
+	if newPassword != confirmPassword {
+		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "Your new password does not match with confirm password."}
+		err = t.Execute(w, passback)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		return
+	}
+
+	//check password strength
+	err = validatePassword(confirmPassword)
+	if err != nil {
+		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "Weak password."}
+		err = t.Execute(w, passback)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		return
+	}
+
+	//insert into db
+	err = api.DB.UpdatePassWToken(resetPassToken, confirmPassword)
+	if err != nil {
+		// fmt.Println(err)
+		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "This link has expired."}
+		err = t.Execute(w, passback)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		return
+	}
+
+	//show success
+	t, err = template.ParseFiles("template/resetPasswordSuccess.html")
+	err = t.Execute(w, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	return
 }

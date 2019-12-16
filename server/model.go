@@ -145,3 +145,8 @@ type ResetPassTokenResult struct {
 	ResetPassToken string `db:"reset_pass_token"`
 	ErrorMsg       string `json:"error_msg"`
 }
+
+type ForgotPassReset struct {
+	ResetPassToken string
+	NewPassword    string
+}
