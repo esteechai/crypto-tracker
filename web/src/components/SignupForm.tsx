@@ -3,11 +3,16 @@ import { StoreContainer } from '../store'
 import {Container, Grid, Segment} from 'semantic-ui-react'
 import {Link, Redirect} from 'react-router-dom'
 
-interface Props{}
+interface Props {}
 
 const SignupForm : React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
-    // store.setIsSubmit(false)
+
+    // if (store.signupVerification && !store.isLogin){
+    //     console.log("redirect to new component")
+    //    return  <Redirect to ='/SignupSuccess' /> 
+    // }
+    
     return (
         <div className="login-signup-container">
         <Container className="ui grid login-signup-container" style={{backgroundColor: ''}} textAlign="center">
@@ -16,14 +21,10 @@ const SignupForm : React.FC<Props> = () => {
              <form className="ui form">
                  <Segment stacked>
                      <h2> Signup</h2>
-                         {/* <div className={"login-submit-error" + (store.isError && store.errorMsg ? 'login-input-error' : '')}>            
-                             {store.isError && store.errorMsg &&
-                                 <p className="login-error">{store.errorMsg}</p>}      
-                         </div> */}
                            {(store.isError && store.errorMsg && store.isSubmit) ?
                       <div className="login-error"><i className="times circle outline icon"></i>{store.errorMsg}</div> : 
                         <div className="success-msg"><i className="check circle icon"></i>{store.successMsg}</div>}  
-                        
+                       
                          <div className="login-signup-form">
                              <Container textAlign="left">
                                  <div className={'field required' + (!store.enteredUsername ? 'login-input-error' : '')}>

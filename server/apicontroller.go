@@ -31,17 +31,85 @@ func (api *API) setupHttp() chi.Router {
 	r.Use(cors.Handler)
 	r.Post("/api/login", api.LoginHandler)
 	r.Post("/api/signup", api.SignupHandler)
-	r.Get("/api/get/products", api.ProductHandler)
-	r.Post("/api/ticker", api.TickerHandler)
-	r.Post("/api/fav-toggle", api.FavouriteHandler)
-	r.Post("/api/fav-list", api.FavouriteListHandler)
-	r.Get("/api/confirm-email/{veriToken}", api.ConfirmEmailHandler)
-	r.Post("/api/reset-password", api.ResetPasswordHandler)
-	r.Post("/api/forgot-password", api.ForgotPasswordHandler)
-	r.Get("/api/reset-password/{resetPassToken}", api.ResetPassWTokenHandler)
-	r.Post("/api/update-password/{resetPassToken}", api.UpdatePassWTokenHandler)
+	r.Get("/api/logout", api.LogoutHandler)
+	r.Get("/api/get/products", api.ProductHandler)               //list all products
+	r.Post("/api/ticker", api.TickerHandler)                     //product details
+	r.Post("/api/fav-toggle", CheckCookie(api.FavouriteHandler)) //fav and unfav products when fav icon is clicked
+
+	r.Get("/api/fav-list", CheckCookie(api.FavouriteListHandler)) //list and update fav products
+
+	r.Get("/api/confirm-email/{veriToken}", api.ConfirmEmailHandler)             //verify email after signup
+	r.Post("/api/reset-password", CheckCookie(api.ResetPasswordHandler))         //handle reset password
+	r.Post("/api/forgot-password", api.ForgotPasswordHandler)                    //handle forgot password and send email
+	r.Get("/api/reset-password/{resetPassToken}", api.ResetPassWTokenHandler)    //handle reset password with reset pass token
+	r.Post("/api/update-password/{resetPassToken}", api.UpdatePassWTokenHandler) //update password with reset pass token
+
+	r.Get("/api/auth", api.ReadCookie) //fetch cookie once login
 	fmt.Println("Successfully connected!")
 	return r
+}
+
+//add cookie
+func AddCookie(w http.ResponseWriter, name string, value string) http.ResponseWriter {
+	cookie := http.Cookie{
+		Name:     name,
+		Value:    value,
+		Expires:  time.Now().Add(7 * 24 * time.Hour),
+		Path:     "/",
+		Secure:   false,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+
+	return w
+}
+
+//delete cookie
+func (api *API) LogoutHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	cookie := http.Cookie{
+		Name:     "CryptoTracker",
+		MaxAge:   -1,
+		Path:     "/",
+		Secure:   false,
+		HttpOnly: true,
+	}
+	http.SetCookie(w, &cookie)
+	passback := &ResponseResult{Success: true, ErrorMsg: ""}
+	json.NewEncoder(w).Encode(passback)
+}
+
+// read cookie after login
+func (api *API) ReadCookie(w http.ResponseWriter, r *http.Request) {
+	passback := &CookieSession{CheckedCookie: false}
+	w.Header().Set("Content-Type", "application/json")
+
+	_, err := r.Cookie("CryptoTracker")
+	if err != nil {
+		fmt.Println("read cookie in api controller:", err)
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+	passback = &CookieSession{CheckedCookie: true}
+	json.NewEncoder(w).Encode(passback)
+
+}
+
+//check cookie when API is called
+func CheckCookie(next CookieHandler) http.HandlerFunc {
+	// passback := &SuccessWithID{ID: "", IsLoggedIn: true, ErrorMsg: ""}
+	function := func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("CryptoTracker")
+		if err != nil {
+			fmt.Println("No cookie here: ", err)
+			return
+		}
+		userID := cookie.Value
+		next(w, r, userID)
+		fmt.Println("check cookie:", userID)
+	}
+	return function
 }
 
 //handle signup verification token
@@ -90,14 +158,18 @@ func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	passback = &SuccessWithID{ID: id, IsLoggedIn: true, ErrorMsg: ""}
-	json.NewEncoder(w).Encode(passback)
+
+	newW := AddCookie(w, "CryptoTracker", id)
+	fmt.Println("cookie added:", newW)
+
+	json.NewEncoder(newW).Encode(passback)
 	return
 }
 
 //handle signup validation
 func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	passback := &SignupResult{IsSignup: true, ErrorMsg: ""}
+	passback := &SignupResult{IsSignup: false, ErrorMsg: "", IsVerified: false}
 
 	var userSignUpData UserSignUpData
 	decoder := json.NewDecoder(r.Body)
@@ -109,39 +181,39 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = validateEmail(userSignUpData.Email)
 	if err != nil {
-		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error()}
+		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
 	err = validatePassword(userSignUpData.Password)
 	if err != nil {
-		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error()}
+		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
 
-	result, err := api.DB.Signup(userSignUpData.Username, userSignUpData.Email, userSignUpData.Password)
+	err = api.DB.Signup(userSignUpData.Username, userSignUpData.Email, userSignUpData.Password)
 	if err != nil {
-		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
+		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
 
-	verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
-	if err != nil {
-		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-		json.NewEncoder(w).Encode(passback)
-		return
-	}
+	// verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
+	// if err != nil {
+	// 	passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error(), IsVerified: false}
+	// 	json.NewEncoder(w).Encode(passback)
+	// 	return
+	// }
 
-	err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
-	if err != nil {
-		fmt.Println(err)
-		passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error()}
-		json.NewEncoder(w).Encode(passback)
-		return
-	}
-
+	// err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	passback = &SignupResult{IsSignup: result, ErrorMsg: err.Error(), IsVerified: false}
+	// 	json.NewEncoder(w).Encode(passback)
+	// 	return
+	// }
+	passback = &SignupResult{IsSignup: true, ErrorMsg: "", IsVerified: false}
 	json.NewEncoder(w).Encode(passback)
 	return
 }
@@ -234,7 +306,7 @@ func (api *API) TickerHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-func (api *API) FavouriteHandler(w http.ResponseWriter, r *http.Request) {
+func (api *API) FavouriteHandler(w http.ResponseWriter, r *http.Request, userID string) {
 	w.Header().Set("Content-Type", "application/json")
 
 	var userFav UserFav
@@ -243,26 +315,31 @@ func (api *API) FavouriteHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	result, err := api.DB.CheckFav(userFav.UserID, userFav.ProductID)
+	// result, err := api.DB.CheckFav(userFav.UserID, userFav.ProductID)
+	result, err := api.DB.CheckFav(userID, userFav.ProductID)
 	json.NewEncoder(w).Encode(result)
 	return
 }
 
-type UserID struct {
-	ID string `json:"user_id"`
-}
+// type UserID struct {
+// 	ID string `json:"user_id"`
+// }
 
-func (api *API) FavouriteListHandler(w http.ResponseWriter, r *http.Request) {
+func (api *API) FavouriteListHandler(w http.ResponseWriter, r *http.Request, userID string) {
 	w.Header().Set("Content-Type", "application/json")
-	var id UserID
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&id)
-	if err != nil {
-		fmt.Println(err)
-	}
-	// fmt.Println("api controller current user id: ", id)
+	fmt.Println("current user id:", userID)
+	// var id UserID
+	// decoder := json.NewDecoder(r.Body)
+	// err := decoder.Decode(&id)
 
-	result, err := api.DB.GetFavProducts(id.ID)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
+
+	// result, err := api.DB.GetFavProducts(id.ID)
+	fmt.Println("api controller: userid ", userID)
+
+	result, err := api.DB.GetFavProducts(userID)
 	if err != nil {
 		return
 	}
@@ -271,7 +348,7 @@ func (api *API) FavouriteListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 //handle reset password
-func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
+func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request, userID string) {
 	w.Header().Set("Content-Type", "application/json")
 	passback := &ResponseResult{Success: true, ErrorMsg: ""}
 	var resetPass ResetPass
@@ -297,7 +374,7 @@ func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = api.DB.ResetPassword(resetPass.UserID, resetPass.CurrentPw, resetPass.NewPw)
+	err = api.DB.ResetPassword(userID, resetPass.CurrentPw, resetPass.NewPw)
 	if err != nil {
 		passback := &ResponseResult{Success: false, ErrorMsg: err.Error()}
 		json.NewEncoder(w).Encode(passback)

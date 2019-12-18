@@ -13,7 +13,6 @@ import (
 func (d *DBDriver) Login(email string, password string) (string, error) {
 	var data SignInCreds
 	err := d.Conn.Get(&data, `SELECT id, password_hash FROM users WHERE email=$1`, email)
-
 	if err != nil {
 		fmt.Println(err)
 		return "", InvalidEmailOrPassword
@@ -22,13 +21,11 @@ func (d *DBDriver) Login(email string, password string) (string, error) {
 	if err == sql.ErrNoRows {
 		fmt.Println("no rows here")
 		return "", EmptyRows
-
 	}
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(passwordHash)
+	// passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 
 	err = bcrypt.CompareHashAndPassword(data.PasswordHash, []byte(password))
 	if err != nil {
@@ -39,7 +36,7 @@ func (d *DBDriver) Login(email string, password string) (string, error) {
 }
 
 //signup
-func (d *DBDriver) Signup(username string, email string, password string) (bool, error) {
+func (d *DBDriver) Signup(username string, email string, password string) error {
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
@@ -81,15 +78,15 @@ func (d *DBDriver) Signup(username string, email string, password string) (bool,
 	if err != nil {
 		if IsUniqueConstraintError(err, UniqueConstraintUsername) {
 			fmt.Println("violate username uq")
-			return false, ViolateUNUsername
+			return ViolateUNUsername
 		}
 		if IsUniqueConstraintError(err, UniqueConstraintEmail) {
 			fmt.Println("violate email uq")
-			return false, ViolateUNEmail
+			return ViolateUNEmail
 		}
-		return false, err
+		return err
 	}
-	return true, nil
+	return nil
 }
 
 //get user's verification token after signup
@@ -184,11 +181,12 @@ func (d *DBDriver) RemoveFav(userId string, productID string) error {
 	return nil
 }
 
-func (d *DBDriver) CheckFav(userID, productID string) (*[]FavProducts, error) {
+func (d *DBDriver) CheckFav(userID string, productID string) (*[]FavProducts, error) {
 	var favID string
 	err := d.Conn.Get(&favID, `SELECT fav_id FROM users_favourites WHERE user_id=$1 AND ticker_id=$2`, userID, productID)
 
 	fmt.Println("check prod: ", productID)
+	fmt.Println("check fav product list in db:", userID, productID)
 
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -6,6 +6,7 @@ import { NavLink } from 'react-router-dom'
 interface Props {}
 
 const ForgotPasswordVerified: React.FC<Props> = () => {
+
     const store = StoreContainer.useContainer()
     return (  
     <div className="reset-pw">

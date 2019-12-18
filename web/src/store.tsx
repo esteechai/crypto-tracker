@@ -1,6 +1,7 @@
-import React, {useState} from 'react'
+import React, {useState, useEffect} from 'react'
 import {createContainer} from 'unstated-next'
 import {AuthenticateUserSignin, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, UserFavList, CurrentUserID, AuthenticateUserSignup, ResetPasword, ForgotPasword} from "./struct"
+import { any } from 'prop-types'
 
 export const useStore = () => {
 
@@ -10,7 +11,8 @@ const [enteredEmail, setEnteredEmail] = useState<string>("")
 const [enteredPassword, setEnteredPassword] = useState<string>("")
 const [isSubmit, setIsSubmit] = useState<boolean>(false)
 const [isLogin, setIsLogin] = useState<boolean>(false)
-const [isSignUp, setSignUp] = useState<boolean>(false)
+// const [isSignup, setIsSignup] = useState<boolean>(false)
+const [signupVerification, setSignupVerification] = useState<boolean>(false)
 const [isError, setIsError] = useState<boolean>(false)
 const [errorMsg, setErrorMsg] = useState<string>("")
 const [username, setUsername] = useState<string>("")
@@ -23,11 +25,15 @@ const [favList, setFavList] = useState<FavToggle [] | undefined>(undefined)
 const [currentUser, setCurrentUser] = useState<string>("")
 const [userFavList, setUserFavList] = useState<UserFavList [] | undefined>(undefined)
 const [openLogoutMsg, setOpenLogoutMsg] = useState<boolean>(false)
-// const [navBarActiveItem, setNavBarActiveItem] = useState<string>("")
 const [enteredCurrentPw, setEnteredCurrentPw] = useState<string>("")
 const [enteredNewPw, setEnteredNewPw] = useState<string>("")
 const [successMsg, setSuccesMsg] = useState<string>("")
 const [verifiedEmail, setVerifiedEmail] = useState<boolean>(false) 
+
+
+useEffect(() => {
+    fetchDataFromAPI("/api/auth", "readCookie")
+},[])
 
 //reset Login & Signup form input
 const ResetFormInput = () => {
@@ -118,32 +124,35 @@ async function postData(url: string, body:any, tag: string){
             
             if(json.is_login){
                 const user: string = json.id
-                currentUserFavList(user)
+                currentUserFavList()
             }   
             break 
+
         case "ticker":      
             setTicker(json)
             console.log(json)
             break
+
         case "favouriteToggle":
             setUserFavList(json)
-            // const newlist =favList?favList.concat(body):[body]
             break
+
         case "favouriteList":
             setUserFavList(json)
-            // console.log("current user fav list: ", json)
             break
+
         case "signup": 
+        console.log("signup result:", json.is_signup)
             if(json.is_signup === false){
                 setIsError(!json.is_signup)
                 setErrorMsg(handleErrorMsg(json.error_msg))
             }
-            else{
-                setIsError(true)
+            else if(json.is_signup === true && json.is_verified === false){
+                setSignupVerification(true)
                 setSuccesMsg("A verification link has been sent to your email. Please check your email and confirm your email address.")
-                console.log("sucess msg here")
             }
             break
+
         case "resetPassword":
             setIsError(!json.success)
             if(json.success){
@@ -155,9 +164,10 @@ async function postData(url: string, body:any, tag: string){
                  setErrorMsg(handleErrorMsg(json.error_msg))
             }
             break
+
         case "forgotPassword":
             console.log(json.error_msg)
-            if (json.error_msg != ""){
+            if (json.error_msg !== ""){
                 setIsError(true)
                 setErrorMsg(handleErrorMsg(json.error_msg))    
             } else {
@@ -175,7 +185,7 @@ const handleLogin = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
     event.preventDefault()
     if(loginValidation()){
         const authenticateUserSignin: AuthenticateUserSignin = {email: enteredEmail, password: enteredPassword, isSubmit: isSubmit}
-        postData("http://localhost:8080/api/login", authenticateUserSignin, "login")
+        postData("/api/login", authenticateUserSignin, "login")
     } else{
         setIsError(true)
     } 
@@ -186,15 +196,16 @@ const handleSignup = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => 
     event.preventDefault() 
     if(signupValidation()){
         const authenticateUserSignup: AuthenticateUserSignup = {username: enteredUsername, email: enteredEmail, password: enteredPassword}
-        postData("http://localhost:8080/api/signup", authenticateUserSignup, "signup")
+        postData("/api/signup", authenticateUserSignup, "signup")
     } else {
         setIsError(true)
     }
+    ResetFormInput()
 }
 
 const handleSelectedProduct = (id:string) => {
     const selectedProductID: selectedProductID = {ticker_id: id}
-    postData("http://localhost:8080/api/ticker", selectedProductID, "ticker")  
+    postData("/api/ticker", selectedProductID, "ticker")  
 }
 
 const handleErrorMsg = (errorFlag: string) => {
@@ -258,6 +269,7 @@ const useFetchProducts = (url: string, options = {}) => {
 const fetchDataFromAPI =(url:string, tag:string)=> {
     const fetchData = async () => {
         try {
+            // fetchData
             const res = await fetch(url)
             const json = await res.json()
             console.log(json)
@@ -266,6 +278,26 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
                 case "product":
                         setProductList(json)
                         break
+
+                case "readCookie":
+                    setIsLogin(json.checked_cookie)
+                    console.log("checked cookie: ", json.checked_cookie)
+                    break 
+
+                case "favouriteList":
+                    setUserFavList(json)
+                    console.log("fav list:", json)
+                    break
+
+                case "logout":
+                    if(json.success){
+                        setOpenLogoutMsg(false)
+                        ResetFormInput()
+                        ResetResetPwInput()
+                        setIsLogin(false)
+                    }
+                    break
+
                 default:
                     break
             }
@@ -289,15 +321,13 @@ const handleFavIcon=(productID: string)=>{
 }
 
 const handleFavourite = (productID: string, userID: string) => {
-        const favToggle: FavToggle = {product_id: productID, user_id: userID}
-        postData("http://localhost:8080/api/fav-toggle", favToggle, "favouriteToggle")
-        currentUserFavList(favToggle.user_id)
+        const favToggle: FavToggle = {product_id: productID}
+        postData("/api/fav-toggle", favToggle, "favouriteToggle")
+        currentUserFavList()
 }
 
-const currentUserFavList = (id: string) =>{
-    const currentUserID: CurrentUserID = {user_id: id}
-    postData("http://localhost:8080/api/fav-list", currentUserID, "favouriteList")
-    setCurrentUser(id)
+    const currentUserFavList = () => {
+    fetchDataFromAPI("/api/fav-list", "favouriteList")
 }
 
 const handleLogoutMsg = () => {
@@ -311,10 +341,8 @@ const CancelLogout = () => {
 
 const ConfirmLogout = () => {
     console.log("confirm logout")
-    setOpenLogoutMsg(false)
-    ResetFormInput()
-    ResetResetPwInput()
-    setIsLogin(false)
+    fetchDataFromAPI("/api/logout", "logout")
+    
 }
 
 const handleEnteredCurrentPw = (event:React.FormEvent<HTMLInputElement>) => setEnteredCurrentPw (event.currentTarget.value)
@@ -324,8 +352,8 @@ const handleResetPassword = (event:React.MouseEvent<HTMLButtonElement, MouseEven
     setIsSubmit(true)
     event.preventDefault()
     if(resetPwValidation()){
-        const resetPassword: ResetPasword={user_id: currentUser, current_password: enteredCurrentPw, new_password:enteredNewPw}
-        postData("http://localhost:8080/api/reset-password", resetPassword, "resetPassword") 
+        const resetPassword: ResetPasword={current_password: enteredCurrentPw, new_password:enteredNewPw}
+        postData("/api/reset-password", resetPassword, "resetPassword") 
     } else {
         setIsError(true)
     }
@@ -333,23 +361,20 @@ const handleResetPassword = (event:React.MouseEvent<HTMLButtonElement, MouseEven
 
 const HandleForgotPassword = () => {
     setIsSubmit(true)
-    // setErrorMsg("")
     console.log("forgot pass email:", enteredEmail)
-    if (enteredEmail != ""){
+    if (enteredEmail !== ""){
         const forgotPassword : ForgotPasword={email: enteredEmail}
-        postData("http://localhost:8080/api/forgot-password", forgotPassword, "forgotPassword")
+        postData("/api/forgot-password", forgotPassword, "forgotPassword")
     } else {
         setIsError(true)
     }
-    
-//    ResetForgotPassInput() 
 }
 
 return {
     setIsSubmit,
     isSubmit,
     isLogin,
-    isSignUp,
+    signupVerification,
     enteredUsername,
     enteredEmail,
     enteredPassword,
@@ -390,7 +415,7 @@ return {
     ResetResetPwInput,
     ResetForgotPassInput,
     HandleForgotPassword,
-    verifiedEmail
+    verifiedEmail,
 }
 }
 

@@ -53,7 +53,6 @@ export interface UserFavList {
 }
 
 export interface FavToggle {
-    user_id: string 
     product_id: string
 }
 
@@ -62,7 +61,6 @@ export interface CurrentUserID {
 }
 
 export interface ResetPasword {
-    user_id: string 
     current_password: string 
     new_password: string 
 }

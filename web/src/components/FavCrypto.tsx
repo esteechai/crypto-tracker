@@ -27,7 +27,7 @@ const FavCrypto: React.FC<FavCryptoProps> = () => {
                     <Card.Description>Volume: {Number(favProducts.Volume).toFixed(2)}</Card.Description>
                     <Card.Content extra>
                         <span onClick={() => {store.handleFavourite(favProducts.ID, store.currentUser)}}>
-                            <i className="large red heart icon"></i> 
+                            <i className="large red heart link icon"></i> 
                         </span>     
                     </Card.Content>    
                 </Card>  

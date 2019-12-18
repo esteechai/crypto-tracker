@@ -12,6 +12,7 @@ import { StoreContainer } from './store';
 import ResetPassword from './components/ResetPassword';
 import ForgotPassword from './components/ForgotPassword';
 import ForgotPasswordVerified from './components/ForgotPassVerified';
+import SignupSuccess from './components/SignupSuccess';
 
 const App: React.FC = () => {
   const store = StoreContainer.useContainer()
@@ -31,6 +32,7 @@ const App: React.FC = () => {
             <Route path="/ResetPassword" component={ResetPassword} />  
             <Route path="/ForgotPassword" component={ForgotPassword} />  
             <Route path="/ForgotPassVerified" component={ForgotPasswordVerified} /> 
+            <Route path="/SignupSuccess" componenet={SignupSuccess} />
           </Switch>
       </Router>   
     </div>

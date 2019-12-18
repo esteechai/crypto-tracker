@@ -11,7 +11,7 @@ const LoginForm: React.FC<Props> = () => {
     if(store.isLogin){
        return <Redirect to= '/CryptoList' />
     }
-    store.useFetchProducts("http://localhost:8080/api/get/products")
+    store.useFetchProducts("/api/get/products")
     
 return(
     <div className="login-signup-container">

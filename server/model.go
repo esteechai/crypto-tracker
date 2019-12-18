@@ -1,6 +1,10 @@
 package main
 
-import "github.com/jmoiron/sqlx"
+import (
+	"net/http"
+
+	"github.com/jmoiron/sqlx"
+)
 
 type DBDriver struct {
 	Conn *sqlx.DB
@@ -44,8 +48,9 @@ type ResponseResult struct {
 
 //result for signup
 type SignupResult struct {
-	IsSignup bool   `json:"is_signup"`
-	ErrorMsg string `json:"error_msg"`
+	IsSignup   bool   `json:"is_signup"`
+	ErrorMsg   string `json:"error_msg"`
+	IsVerified bool   `json:"is_verified"`
 }
 
 const (
@@ -109,7 +114,6 @@ type UserFavDB struct {
 }
 
 type UserFav struct {
-	UserID    string `json:"user_id"`
 	ProductID string `json:"product_id"`
 	IsFav     bool   `json:"is_fav"`
 }
@@ -132,7 +136,6 @@ type SendEmailInfo struct {
 }
 
 type ResetPass struct {
-	UserID    string `json:"user_id"`
 	CurrentPw string `json:"current_password"`
 	NewPw     string `json:"new_password"`
 }
@@ -149,4 +152,11 @@ type ResetPassTokenResult struct {
 type ForgotPassReset struct {
 	ResetPassToken string
 	NewPassword    string
+}
+
+//check cookie
+type CookieHandler func(w http.ResponseWriter, r *http.Request, userID string)
+
+type CookieSession struct {
+	CheckedCookie bool `json:"checked_cookie"`
 }
