@@ -37,3 +37,11 @@ var SameResetPwInput = errors.New("Same_Reset_Password_Input")
 var RequestResetPassTokenError = errors.New("Request_Reset_Pass_Token_Error")
 
 var DbQueryError = errors.New("DB_Query_Error")
+
+var SignupError = errors.New("Signup_Error")
+
+var UserVerificationError = errors.New("User_Verification_Error")
+
+var JSONParseError = errors.New("JSON_Parse_Error")
+
+var AddProductError = errors.New("Add_Product_Error")

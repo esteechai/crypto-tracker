@@ -58,6 +58,7 @@ const (
 	UniqueConstraintEmail    = "user_un_email"
 )
 
+//fetches all products from coinbase api and store in db
 type Products struct {
 	ID             string `json:"id"`
 	BaseCurrency   string `json:"base_currency"`
@@ -68,13 +69,33 @@ type Products struct {
 	BaseIncrement  string `json:"base_increment"`
 	DisplayName    string `json:"display_name"`
 	MinMarketFunds string `json:"min_market_funds"`
-	MaxMarketFunds string `json:"max_maret_funds"`
+	MaxMarketFunds string `json:"max_market_funds"`
 	MarginEnabled  bool   `json:"margin_enabled"`
 	PostOnly       bool   `json:"post_only"`
 	LimitOnly      bool   `json:"limit_only"`
 	CancelOnly     bool   `json:"cancel_only"`
 	Status         string `json:"status"`
 	StatusMessage  string `json:"status_message"`
+}
+
+//retrieves all products from db
+type ProductsList struct {
+	ID             string `db:"id"`
+	BaseCurrency   string `db:"base_currency"`
+	QuoteCurrency  string `db:"quote_currency"`
+	BaseMinSize    string `db:"base_min_size"`
+	BaseMaxSize    string `db:"base_max_size"`
+	QuoteIncrement string `db:"quote_increment"`
+	BaseIncrement  string `db:"base_increment"`
+	DisplayName    string `db:"display_name"`
+	MinMarketFunds string `db:"min_market_funds"`
+	MaxMarketFunds string `db:"max_market_funds"`
+	MarginEnabled  bool   `db:"margin_enabled"`
+	PostOnly       bool   `db:"post_only"`
+	LimitOnly      bool   `db:"limit_only"`
+	CancelOnly     bool   `db:"cancel_only"`
+	Status         string `db:"status"`
+	StatusMessage  string `db:"status_message"`
 }
 
 type ProductTicker struct {
@@ -88,7 +109,7 @@ type ProductTicker struct {
 }
 
 type TickerData struct {
-	ID     string `db:"ticker_id"`
+	ID     string `db:"id"`
 	Price  string `db:"price"`
 	Size   string `db:"size"`
 	Time   string `db:"time"`
@@ -119,7 +140,7 @@ type UserFav struct {
 }
 
 type FavProducts struct {
-	ID     string `db:"ticker_id"`
+	ID     string `db:"id"`
 	Price  string `db:"price"`
 	Size   string `db:"size"`
 	Time   string `db:"time"`

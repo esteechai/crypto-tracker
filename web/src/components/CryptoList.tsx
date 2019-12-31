@@ -17,13 +17,13 @@ const CryptoList: React.FC<coinbaseProductsProps> = () => {
         <Card.Group>
             {store.searchResult?store.searchResult.map((product:coinbaseProducts)=>{
                return ( 
-                    <Card key={product.id}>
-                    <Card.Header>{product.id}</Card.Header>             
-                    <Card.Meta>Base currency: {product.base_currency}</Card.Meta>
-                    <Card.Meta>Quote currency: {product.quote_currency}</Card.Meta>
+                    <Card key={product.ID}>
+                    <Card.Header>{product.ID}</Card.Header>             
+                    <Card.Meta>Base currency: {product.BaseCurrency}</Card.Meta>
+                    <Card.Meta>Quote currency: {product.QuoteCurrency}</Card.Meta>
                     <Card.Content extra>
                             <span className="right floated">
-                                <Modal trigger={<button className="tiny ui button" onClick={() => {store.handleSelectedProduct(product.id)}}>More details
+                                <Modal trigger={<button className="tiny ui button" onClick={() => {store.handleSelectedProduct(product.ID)}}>More details
                                         </button>} size="tiny">
                                             {store.ticker?<React.Fragment><Modal.Header>{store.ticker.ID}</Modal.Header>
                                         <Modal.Description>
@@ -32,8 +32,8 @@ const CryptoList: React.FC<coinbaseProductsProps> = () => {
                                         </Modal.Description></React.Fragment>:null}
                                 </Modal>                                   
                             </span>
-                        <span onClick={() => {store.handleFavourite(product.id, store.currentUser)}}>
-                            {store.handleFavIcon(product.id) ? <i className="large red heart link icon"></i> : <i className="large red heart outline link icon" ></i> }
+                        <span onClick={() => {store.handleFavourite(product.ID, store.currentUser)}}>
+                            {store.handleFavIcon(product.ID) ? <i className="large red heart link icon"></i> : <i className="large red heart outline link icon" ></i> }
                         </span>     
                     </Card.Content>    
                 </Card>            

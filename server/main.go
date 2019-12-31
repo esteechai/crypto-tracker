@@ -23,7 +23,7 @@ func main() {
 	//email
 	Scheme := flag.String("scheme", "http", "scheme for http or https")
 	ServerDomain := flag.String("server-domain", "cryptotracker.interns.theninja.life", "server domain name")
-	EmailAPIKey := flag.String("email-api-key", "1f1faefbc512e382465fe0c5031334a1-f8b3d330-a01f2943", "api key for sending email")
+	EmailAPIKey := flag.String("email-api-key", "", "api key for sending email")
 	EmailDomain := flag.String("email-domain", "sandbox780aae9321c242b999909e946d7d9f5b.mailgun.org", "domain name for sending email")
 
 	flag.Parse()
@@ -36,6 +36,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
 	defer conn.Close()
 
 	err = conn.Ping()

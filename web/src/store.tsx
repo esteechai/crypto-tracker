@@ -1,7 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import {createContainer} from 'unstated-next'
 import {AuthenticateUserSignin, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, UserFavList, CurrentUserID, AuthenticateUserSignup, ResetPasword, ForgotPasword} from "./struct"
-import { any } from 'prop-types'
 
 export const useStore = () => {
 
@@ -29,7 +28,6 @@ const [enteredCurrentPw, setEnteredCurrentPw] = useState<string>("")
 const [enteredNewPw, setEnteredNewPw] = useState<string>("")
 const [successMsg, setSuccesMsg] = useState<string>("")
 const [verifiedEmail, setVerifiedEmail] = useState<boolean>(false) 
-
 
 useEffect(() => {
     fetchDataFromAPI("/api/auth", "readCookie")
@@ -65,7 +63,6 @@ const ResetForgotPassInput = () => {
     setIsError(false)
     setEnteredEmail("")    
 }
-
 
 const loginValidation = () => {
     if(enteredEmail === ""){
@@ -123,7 +120,7 @@ async function postData(url: string, body:any, tag: string){
             setIsLogin(json.is_login)
             
             if(json.is_login){
-                const user: string = json.id
+                // const user: string = json.id
                 currentUserFavList()
             }   
             break 
@@ -143,7 +140,7 @@ async function postData(url: string, body:any, tag: string){
 
         case "signup": 
         console.log("signup result:", json.is_signup)
-            if(json.is_signup === false){
+            if(!json.is_signup){
                 setIsError(!json.is_signup)
                 setErrorMsg(handleErrorMsg(json.error_msg))
             }
@@ -173,7 +170,6 @@ async function postData(url: string, body:any, tag: string){
             } else {
                 setVerifiedEmail(true)
                 setIsError(false)
-                // setSuccesMsg("A confirmation email has been sent ")
             }
             break
     }
@@ -240,31 +236,42 @@ const handleErrorMsg = (errorFlag: string) => {
             return "There's no email address found in our database. Please try again."
         case "DB_Query_Error":
             return "Requested data does not exist"
+        case "Signup_Error":
+            return "Error occured on signup"
+        case "User_Verification_Error":
+            return "Error occured on verifying your account"
+        case "JSON_Parse_Error":
+            return "Error occured when sending request to server"
+        case "Add_Product_Error":
+            return "Error occured on listing all products"
+        // case "Update_Tickers_Error":
+            // return "Error occured on updating tickers"
         default: 
         return "An Unexpected Error Occured"
     }
 }
 
-const useFetchProducts = (url: string, options = {}) => {
-    const [resp, setResp] = React.useState()
-    const [err, setErr] = React.useState()
-    React.useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const res = await fetch(url, options)
-                const json = await res.json()
-                setResp(json)
-                console.log(json)
-                setProductList(json)
-                setSearchResult(json)
-            } catch (err) {
-                setErr(err)
-            }
-        }
-        fetchData()
-    }, [])
-    return { resp, err }
-}
+// const useFetchProducts = (url: string, options = {}) => {
+//     const [resp, setResp] = React.useState()
+//     const [err, setErr] = React.useState()
+//     React.useEffect(() => {
+//         const fetchData = async () => {
+//             try {
+//                 const res = await fetch(url, options)
+//                 const json = await res.json()
+//                 setResp(json)
+//                 // console.log(json)
+//                 setProductList(json)
+//                 console.log("set product list in store:", json)
+//                 setSearchResult(json)
+//             } catch (err) {
+//                 setErr(err)
+//             }
+//         }
+//         fetchData()
+//     }, [])
+//     return { resp, err }
+// }
 
 const fetchDataFromAPI =(url:string, tag:string)=> {
     const fetchData = async () => {
@@ -277,6 +284,8 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
             switch(tag){
                 case "product":
                         setProductList(json)
+                        setSearchResult(json)
+                        console.log("fetch data from api: ", productList)
                         break
 
                 case "readCookie":
@@ -311,7 +320,7 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
 const handleSearch = (event: React.FormEvent<HTMLInputElement>) => {
    const input: string = event.currentTarget.value
     setSearchKey(input)    
-    setSearchResult(productList?productList.filter((result: coinbaseProducts)=> result.id.toLowerCase().includes(input.toLowerCase())):undefined)    
+    setSearchResult(productList?productList.filter((result: coinbaseProducts)=> result.ID.toLowerCase().includes(input.toLowerCase())):undefined)    
 }
 
 const handleFavIcon=(productID: string)=>{
@@ -386,7 +395,7 @@ return {
     isError,
     errorMsg,
     productList,
-    useFetchProducts,
+    // useFetchProducts,
     handleSelectedProduct,
     ticker,
     setTicker,
@@ -406,6 +415,7 @@ return {
     ConfirmLogout,
     handleLogoutMsg,
     handleResetPassword,
+    fetchDataFromAPI,
     enteredCurrentPw,
     enteredNewPw,
     handleEnteredCurrentPw,

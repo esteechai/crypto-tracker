@@ -1,7 +1,6 @@
-import React, { useState } from 'react'
+import React, {useEffect} from 'react'
 import { StoreContainer } from '../store'
-import { render} from 'react-dom'
-import {Input, Container, Grid, GridColumn, Segment, Button} from 'semantic-ui-react'
+import {Container, Grid, Segment} from 'semantic-ui-react'
 import {Link, Redirect} from 'react-router-dom'
 
 interface Props{}
@@ -9,9 +8,15 @@ interface Props{}
 const LoginForm: React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
     if(store.isLogin){
+        store.fetchDataFromAPI("/api/get/products","product")
        return <Redirect to= '/CryptoList' />
     }
-    store.useFetchProducts("/api/get/products")
+
+
+// useEffect(() => {
+   
+// },[])
+
     
 return(
     <div className="login-signup-container">

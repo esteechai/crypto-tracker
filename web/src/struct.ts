@@ -11,22 +11,22 @@ export interface AuthenticateUserSignup {
 }
 
 export interface coinbaseProducts {
-    id: string 
-    base_currency: string 
-    quote_currency: string 
-    base_min_size: string 
-    base_max_size: string 
-    quote_increment: string 
-    base_increment: string 
-    display_name: string 
-    min_market_funds: string 
-    max_market_funds: string 
-    margin_enabled: boolean
-    post_only: boolean
-    limit_only: boolean 
-    cancel_only: boolean 
-    status: string 
-    status_message: string 
+    ID: string 
+    BaseCurrency: string 
+    QuoteCurrency: string 
+    BaseMinSize: string 
+    BaseMaxSize: string 
+    QuoteIncrement: string 
+    BaseIncrement: string 
+    DisplayName: string 
+    MinMarketFunds: string 
+    MaxMarketFunds: string 
+    MarginEnabled: boolean
+    PostOnly: boolean
+    LimitOnly: boolean 
+    CancelOnly: boolean 
+    Status: string 
+    StatusMessage: string 
 }
 
 export interface selectedProductID {

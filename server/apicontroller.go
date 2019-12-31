@@ -9,16 +9,18 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
 )
 
-var products []*Products
-var productTicker *ProductTicker
-
 func (api *API) setupHttp() chi.Router {
-	GetProducts()
 	go api.GetProductTicker()
 	r := chi.NewRouter()
+
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
 
 	cors := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
@@ -49,7 +51,7 @@ func (api *API) setupHttp() chi.Router {
 	return r
 }
 
-//add cookie
+//AddCookie func adds cookie once user is logged in
 func AddCookie(w http.ResponseWriter, name string, value string) http.ResponseWriter {
 	cookie := http.Cookie{
 		Name:     name,
@@ -64,7 +66,7 @@ func AddCookie(w http.ResponseWriter, name string, value string) http.ResponseWr
 	return w
 }
 
-//delete cookie
+//LogoutHandler func deletes cookie once user is logged out
 func (api *API) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
@@ -80,75 +82,73 @@ func (api *API) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(passback)
 }
 
-// read cookie after login
+//ReadCookie func reads and returns user's cookie
 func (api *API) ReadCookie(w http.ResponseWriter, r *http.Request) {
 	passback := &CookieSession{CheckedCookie: false}
 	w.Header().Set("Content-Type", "application/json")
 
 	_, err := r.Cookie("CryptoTracker")
+
 	if err != nil {
-		fmt.Println("read cookie in api controller:", err)
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
+
 	passback = &CookieSession{CheckedCookie: true}
 	json.NewEncoder(w).Encode(passback)
-
 }
 
-//check cookie when API is called
+//CheckCookie func checks user's cookie
 func CheckCookie(next CookieHandler) http.HandlerFunc {
-	// passback := &SuccessWithID{ID: "", IsLoggedIn: true, ErrorMsg: ""}
 	function := func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("CryptoTracker")
+
 		if err != nil {
-			fmt.Println("No cookie here: ", err)
+			fmt.Println("Check cookie error: ", err)
 			return
 		}
 		userID := cookie.Value
 		next(w, r, userID)
-		fmt.Println("check cookie:", userID)
 	}
 	return function
 }
 
-//handle signup verification token
+//ConfirmEmailHandler func verifies user's email and set account status to verified
 func (api *API) ConfirmEmailHandler(w http.ResponseWriter, r *http.Request) {
 	veriToken := strings.ToLower(chi.URLParam(r, "veriToken"))
 	if veriToken != "" {
 		err := api.DB.VerifyUserAcc(veriToken)
 		if err != nil {
-			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
-	fmt.Println("email verification successful")
 
 	t, err := template.ParseFiles("template/verifiedEmail.html")
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	err = t.Execute(w, nil)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
 	return
 }
 
-//handle login validation
+//LoginHandler func handles user login
 func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
-
 	w.Header().Set("Content-Type", "application/json")
-	passback := &SuccessWithID{ID: "", IsLoggedIn: true, ErrorMsg: ""}
+	passback := &SuccessWithID{ID: "", IsLoggedIn: false, ErrorMsg: ""}
 
 	var loginDetails UserSignInData
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&loginDetails)
+
+	err := json.NewDecoder(r.Body).Decode(&loginDetails)
 	if err != nil {
-		fmt.Println(err)
+		passback := &SuccessWithID{ID: "", IsLoggedIn: false, ErrorMsg: JSONParseError.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
 	}
 
 	id, err := api.DB.Login(loginDetails.Email, loginDetails.Password)
@@ -158,25 +158,22 @@ func (api *API) LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	passback = &SuccessWithID{ID: id, IsLoggedIn: true, ErrorMsg: ""}
-
 	newW := AddCookie(w, "CryptoTracker", id)
-	fmt.Println("cookie added:", newW)
-
 	json.NewEncoder(newW).Encode(passback)
 	return
 }
 
-//handle signup validation
+//SignupHandler func handles user signup
 func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	passback := &SignupResult{IsSignup: false, ErrorMsg: "", IsVerified: false}
 
 	var userSignUpData UserSignUpData
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&userSignUpData)
+	err := json.NewDecoder(r.Body).Decode(&userSignUpData)
 
 	if err != nil {
-		fmt.Println(err)
+		passback = &SignupResult{IsSignup: false, ErrorMsg: JSONParseError.Error(), IsVerified: false}
+		return
 	}
 
 	err = validateEmail(userSignUpData.Email)
@@ -185,6 +182,7 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
+
 	err = validatePassword(userSignUpData.Password)
 	if err != nil {
 		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
@@ -218,142 +216,166 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-//handle products list retrieved from coinbase API
+//ProductHandler func handles products list retrieved from coinbase API
 func (api *API) ProductHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(products)
-}
+	passback := &ResponseResult{Success: false, ErrorMsg: ""}
 
-//retrieve products from coinbase api
-func GetProducts() []*Products {
-	resp, err := http.Get("https://api.pro.coinbase.com/products")
+	result, err := api.DB.GetProducts()
 	if err != nil {
-		fmt.Println(err)
-		return nil
+		passback = &ResponseResult{Success: false, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
 	}
 
-	defer resp.Body.Close()
-
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&products)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	return products
+	json.NewEncoder(w).Encode(result)
+	return
 }
 
+//GetProductsTicker func updates tickers every second in db
 func (api *API) GetProductTicker() {
+	var products []Products
+
 	if products == nil {
-		GetProducts()
+		resp, err := http.Get("https://api.pro.coinbase.com/products")
+
+		if err != nil {
+			fmt.Println("Update Ticker Error: ", err)
+			return
+		}
+		defer resp.Body.Close()
+
+		err = json.NewDecoder(resp.Body).Decode(&products)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		err = api.DB.AddProducts(products)
+		if err != nil {
+			fmt.Println("List Products Error: ", err)
+			return
+		}
 	}
 
 	n := 0
+	c := time.NewTicker(1 * time.Second)
+
 	for {
-		go api.FetchTicker(products[n].ID)
-
-		//fmt.Println(products[n].ID)
-
-		if n >= len(products)-1 {
-			n = 0
-		} else {
-			n++
+		select {
+		case <-c.C:
+			err := api.FetchTicker(products[n].ID)
+			if err != nil {
+				fmt.Println("Update Ticker Error: ", err)
+				continue
+			}
+			if n >= len(products)-1 {
+				n = 0
+			} else {
+				n++
+			}
 		}
-		time.Sleep(1 * time.Second)
 	}
 }
 
-// get product details
-func (api *API) FetchTicker(id string) {
+//FetchTicker func gets product details
+func (api *API) FetchTicker(id string) error {
 	resp, err := http.Get("https://api.pro.coinbase.com/products/" + id + "/ticker")
 
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 	defer resp.Body.Close()
 
 	var productTicker *ProductTicker
 
-	decoder := json.NewDecoder(resp.Body)
-	err = decoder.Decode(&productTicker)
+	err = json.NewDecoder(resp.Body).Decode(&productTicker)
+
 	if err != nil {
-		fmt.Println(err)
-		return
+		return err
 	}
 
 	tickerData := &TickerData{ID: id, Price: productTicker.Price, Size: productTicker.Size, Time: productTicker.Time, Bid: productTicker.Bid, Ask: productTicker.Ask, Volume: productTicker.Volume}
-	api.DB.UpdateTicker(tickerData)
+	err = api.DB.UpdateTicker(tickerData)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type CoinID struct {
 	ID string `json:"ticker_id"`
 }
 
+//TickerHandler func handles toggles favourites in db
 func (api *API) TickerHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	var id CoinID
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&id)
+	passback := &ResponseResult{Success: false, ErrorMsg: ""}
+
+	err := json.NewDecoder(r.Body).Decode(&id)
 	if err != nil {
-		fmt.Println(err)
+		passback = &ResponseResult{Success: false, ErrorMsg: JSONParseError.Error()}
+		json.NewEncoder(w).Encode(passback)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	result, err := api.DB.SelectedProduct(id.ID)
 	if err != nil {
+		passback = &ResponseResult{Success: false, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
 		return
 	}
 	json.NewEncoder(w).Encode(result)
+	return
 }
 
+//FavouriteHandler func checks user's favourites in db
 func (api *API) FavouriteHandler(w http.ResponseWriter, r *http.Request, userID string) {
 	w.Header().Set("Content-Type", "application/json")
+	passback := &ResponseResult{Success: false, ErrorMsg: ""}
 
 	var userFav UserFav
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&userFav)
+	err := json.NewDecoder(r.Body).Decode(&userFav)
 	if err != nil {
-		fmt.Println(err)
-	}
-	// result, err := api.DB.CheckFav(userFav.UserID, userFav.ProductID)
-	result, err := api.DB.CheckFav(userID, userFav.ProductID)
-	json.NewEncoder(w).Encode(result)
-	return
-}
-
-// type UserID struct {
-// 	ID string `json:"user_id"`
-// }
-
-func (api *API) FavouriteListHandler(w http.ResponseWriter, r *http.Request, userID string) {
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Println("current user id:", userID)
-	// var id UserID
-	// decoder := json.NewDecoder(r.Body)
-	// err := decoder.Decode(&id)
-
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// result, err := api.DB.GetFavProducts(id.ID)
-	fmt.Println("api controller: userid ", userID)
-
-	result, err := api.DB.GetFavProducts(userID)
-	if err != nil {
+		passback = &ResponseResult{Success: false, ErrorMsg: JSONParseError.Error()}
+		json.NewEncoder(w).Encode(passback)
 		return
 	}
+
+	result, err := api.DB.CheckFav(userID, userFav.ProductID)
+	if err != nil {
+		passback = &ResponseResult{Success: false, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
 	json.NewEncoder(w).Encode(result)
 	return
 }
 
-//handle reset password
+//FavouriteListHandler func gets user's products list
+func (api *API) FavouriteListHandler(w http.ResponseWriter, r *http.Request, userID string) {
+	w.Header().Set("Content-Type", "application/json")
+	passback := &ResponseResult{Success: false, ErrorMsg: ""}
+
+	result, err := api.DB.GetFavProducts(userID)
+
+	if err != nil {
+		passback = &ResponseResult{Success: false, ErrorMsg: err.Error()}
+		json.NewEncoder(w).Encode(passback)
+		return
+	}
+
+	json.NewEncoder(w).Encode(result)
+	return
+}
+
+//ResetPasswordHandler func handles password reset without reset pass token
 func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request, userID string) {
 	w.Header().Set("Content-Type", "application/json")
 	passback := &ResponseResult{Success: true, ErrorMsg: ""}
 	var resetPass ResetPass
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&resetPass)
+
+	err := json.NewDecoder(r.Body).Decode(&resetPass)
 	if err != nil {
 		fmt.Println(err)
 		passback = &ResponseResult{Success: false, ErrorMsg: BadRequestError.Error()}
@@ -380,20 +402,21 @@ func (api *API) ResetPasswordHandler(w http.ResponseWriter, r *http.Request, use
 		json.NewEncoder(w).Encode(passback)
 		return
 	}
+
 	json.NewEncoder(w).Encode(passback)
 	return
 }
 
+//ForgotPasswordHandler func handles Forgot Password
 func (api *API) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	passback := &ResetPassTokenResult{ResetPassToken: "", ErrorMsg: ""}
 	var email ForgotPass
 
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&email)
-
+	err := json.NewDecoder(r.Body).Decode(&email)
 	if err != nil {
-		fmt.Println(err)
+		passback = &ResetPassTokenResult{ResetPassToken: "", ErrorMsg: JSONParseError.Error()}
+		json.NewEncoder(w).Encode(passback)
 		return
 	}
 
@@ -417,7 +440,7 @@ func (api *API) ForgotPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-//handle password reset with token
+//ResetPassWTokenHandler func handles password reset with token
 func (api *API) ResetPassWTokenHandler(w http.ResponseWriter, r *http.Request) {
 	resetPassToken := strings.ToLower(chi.URLParam(r, "resetPassToken"))
 	passback := &ForgotPassReset{ResetPassToken: resetPassToken, NewPassword: ""}
@@ -428,72 +451,70 @@ func (api *API) ResetPassWTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	err = t.Execute(w, passback)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	return
 }
 
-//validate password input on forgot password
+//UpdatePassWTokenHandler func validates new password input on forgot password
 func (api *API) UpdatePassWTokenHandler(w http.ResponseWriter, r *http.Request) {
 	resetPassToken := strings.ToLower(chi.URLParam(r, "resetPassToken"))
 	newPassword := r.FormValue("newPw")
 	confirmPassword := r.FormValue("confirmPw")
 	t, err := template.ParseFiles("template/resetPasswordError.html")
 	passback := ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: ""}
-	// fmt.Println("forgot pw: ", newPassword, confirmPassword)
 
 	if newPassword == "" || confirmPassword == "" {
 		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "Please enter both new and confirm password."}
 		err = t.Execute(w, passback)
 		if err != nil {
-			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		return
 	}
 
-	//check whether both password input matches
+	//checks whether both password input matches
 	if newPassword != confirmPassword {
 		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "Your new password does not match with confirm password."}
 		err = t.Execute(w, passback)
 		if err != nil {
-			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		return
 	}
 
-	//check password strength
+	//checks password strength
 	err = validatePassword(confirmPassword)
 	if err != nil {
 		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "Weak password."}
 		err = t.Execute(w, passback)
 		if err != nil {
-			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		return
 	}
 
-	//insert into db
+	//inserts into db
 	err = api.DB.UpdatePassWToken(resetPassToken, confirmPassword)
 	if err != nil {
-		// fmt.Println(err)
 		passback = ResetPassTokenResult{ResetPassToken: resetPassToken, ErrorMsg: "This link has expired."}
 		err = t.Execute(w, passback)
 		if err != nil {
-			fmt.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 		return
 	}
 
-	//show success
+	//shows success
 	t, err = template.ParseFiles("template/resetPasswordSuccess.html")
 	err = t.Execute(w, nil)
 	if err != nil {
-		fmt.Println(err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	return

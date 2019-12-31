@@ -19,7 +19,7 @@ const FavCrypto: React.FC<FavCryptoProps> = () => {
             return (
                 <Card key={favProducts.ID}>
                     <Card.Header>{favProducts.ID}</Card.Header>  
-                    <Card.Meta>{favProducts.Time}</Card.Meta>           
+                    <Card.Meta>Last update: {favProducts.Time}</Card.Meta>           
                     <Card.Description>Bid: {favProducts.Bid}</Card.Description>
                     <Card.Description>Ask: {favProducts.Ask}</Card.Description>
                     <Card.Description>Price: {favProducts.Price}</Card.Description>
