@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react'
 import {createContainer} from 'unstated-next'
-import {AuthenticateUserSignin, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, UserFavList, CurrentUserID, AuthenticateUserSignup, ResetPasword, ForgotPasword} from "./struct"
+import {AuthenticateUserSignin, coinbaseProducts, coinbaseTicker, selectedProductID, FavToggle, UserFavList, AuthenticateUserSignup, ResetPasword, ForgotPasword} from "./struct"
 
 export const useStore = () => {
 
@@ -14,7 +14,6 @@ const [isLogin, setIsLogin] = useState<boolean>(false)
 const [signupVerification, setSignupVerification] = useState<boolean>(false)
 const [isError, setIsError] = useState<boolean>(false)
 const [errorMsg, setErrorMsg] = useState<string>("")
-const [username, setUsername] = useState<string>("")
 const [ticker, setTicker] = useState<coinbaseTicker | undefined> (undefined) 
 const [isPopUp, setPopUp] = useState<boolean>(false)
 const [productList, setProductList] = React.useState<coinbaseProducts[] | undefined>(undefined)
@@ -120,7 +119,6 @@ async function postData(url: string, body:any, tag: string){
             setIsLogin(json.is_login)
             
             if(json.is_login){
-                // const user: string = json.id
                 currentUserFavList()
             }   
             break 
@@ -244,8 +242,6 @@ const handleErrorMsg = (errorFlag: string) => {
             return "Error occured when sending request to server"
         case "Add_Product_Error":
             return "Error occured on listing all products"
-        // case "Update_Tickers_Error":
-            // return "Error occured on updating tickers"
         default: 
         return "An Unexpected Error Occured"
     }
@@ -285,17 +281,14 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
                 case "product":
                         setProductList(json)
                         setSearchResult(json)
-                        console.log("fetch data from api: ", productList)
                         break
 
                 case "readCookie":
                     setIsLogin(json.checked_cookie)
-                    console.log("checked cookie: ", json.checked_cookie)
                     break 
 
                 case "favouriteList":
                     setUserFavList(json)
-                    console.log("fav list:", json)
                     break
 
                 case "logout":
@@ -306,7 +299,6 @@ const fetchDataFromAPI =(url:string, tag:string)=> {
                         setIsLogin(false)
                     }
                     break
-
                 default:
                     break
             }
@@ -351,7 +343,6 @@ const CancelLogout = () => {
 const ConfirmLogout = () => {
     console.log("confirm logout")
     fetchDataFromAPI("/api/logout", "logout")
-    
 }
 
 const handleEnteredCurrentPw = (event:React.FormEvent<HTMLInputElement>) => setEnteredCurrentPw (event.currentTarget.value)
@@ -395,7 +386,6 @@ return {
     isError,
     errorMsg,
     productList,
-    // useFetchProducts,
     handleSelectedProduct,
     ticker,
     setTicker,

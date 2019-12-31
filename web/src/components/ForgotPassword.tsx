@@ -9,7 +9,7 @@ const ForgotPassword: React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
 
     if(store.verifiedEmail){
-        return <Redirect to ="/ForgotPassVerified" /> 
+        return <Redirect to ="/forgot-pass-verified" /> 
     }
 
     return (  
@@ -18,7 +18,7 @@ const ForgotPassword: React.FC<Props> = () => {
             <Grid.Column style={{width:500}}>  
                 <Form>
                      <h2>Forgot Password</h2>
-                     <p>Forgotten your password? Enter your email address below, and we'll email instructions for setting a new one.</p>
+                     <p>Forgotten your password? Enter your email address below, and we'll email you instructions for setting a new one.</p>
                     {(store.isError && store.errorMsg && store.isSubmit) ?
                     <div className="login-error"><i className="times circle outline icon"></i>{store.errorMsg}</div> : 
                     ''}                          
@@ -31,11 +31,11 @@ const ForgotPassword: React.FC<Props> = () => {
                         </div>
                     </Form.Field>
                     <Button type="submit" className="ui primary button" onClick={store.HandleForgotPassword}>Reset my password</Button>
-                    <Button type="cancel"><NavLink to="/LoginForm" onClick={store.ResetForgotPassInput}>Cancel</NavLink></Button>
+                    <Button type="cancel"><NavLink to="/login" onClick={store.ResetForgotPassInput}>Cancel</NavLink></Button>
                  </Form>
              </Grid.Column>
         </Grid>
     </div> 
 )
 }
-export default ForgotPassword
+export {ForgotPassword}

@@ -11,7 +11,7 @@ interface FavCryptoProps {
 const FavCrypto: React.FC<FavCryptoProps> = () => {
     const store = StoreContainer.useContainer() 
     if (!store.isLogin){
-        return <Redirect to= '/LoginForm' />
+        return <Redirect to= '/login' />
     }
     return (
         <Card.Group>  
@@ -37,4 +37,4 @@ const FavCrypto: React.FC<FavCryptoProps> = () => {
     )
 }
 
-export default FavCrypto
+export {FavCrypto}

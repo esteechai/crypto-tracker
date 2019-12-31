@@ -1,18 +1,18 @@
 import React from 'react';
 import './App.css';
-import LoginForm from "./components/LoginForm"
-import Dashboard from "./components/Dashboard"
+import {Login} from "./components/LoginForm"
+import {Dashboard} from "./components/Dashboard"
 import {BrowserRouter as Router, Route, Switch} from 'react-router-dom'
-import NavBar from './components/NavBar';
-import LoginNavBar from './components/LoginNavBar'; 
-import CryptoList from './components/CryptoList';
-import FavCrypto from './components/FavCrypto';
-import SignupForm from './components/SignupForm';
+import {NavBar} from './components/NavBar';
+import {LoginNavBar} from './components/LoginNavBar'; 
+import {CryptoList} from './components/CryptoList';
+import {FavCrypto} from './components/FavCrypto';
+import {SignupForm} from './components/SignupForm';
 import { StoreContainer } from './store';
-import ResetPassword from './components/ResetPassword';
-import ForgotPassword from './components/ForgotPassword';
-import ForgotPasswordVerified from './components/ForgotPassVerified';
-import SignupSuccess from './components/SignupSuccess';
+import {ResetPassword} from './components/ResetPassword';
+import {ForgotPassword} from './components/ForgotPassword';
+import {ForgotPasswordVerified} from './components/ForgotPassVerified';
+import {SignupSuccess} from './components/SignupSuccess';
 
 const App: React.FC = () => {
   const store = StoreContainer.useContainer()
@@ -22,17 +22,17 @@ const App: React.FC = () => {
       <Router> 
       {(store.isLogin)? <NavBar /> : <LoginNavBar />}
           <Switch>
-            <Route exact path="/" component={LoginForm} />
-            <Route path="/Dashboard" component={Dashboard} />
-            <Route path="/NavBar" component={NavBar} />
-            <Route path="/CryptoList" component={CryptoList} />
-            <Route path="/FavCrypto" component={FavCrypto} /> 
-            <Route path="/SignupForm" component={SignupForm} />   
-            <Route path="/LoginForm" component={LoginForm} />  
-            <Route path="/ResetPassword" component={ResetPassword} />  
-            <Route path="/ForgotPassword" component={ForgotPassword} />  
-            <Route path="/ForgotPassVerified" component={ForgotPasswordVerified} /> 
-            <Route path="/SignupSuccess" componenet={SignupSuccess} />
+            <Route exact path="/" component={Login} />
+            <Route path="/dashboard" component={Dashboard} />
+            <Route path="/navBar" component={NavBar} />
+            <Route path="/crypto-list" component={CryptoList} />
+            <Route path="/fav" component={FavCrypto} /> 
+            <Route path="/signup" component={SignupForm} />   
+            <Route path="/login" component={Login} />  
+            <Route path="/reset-password" component={ResetPassword} />  
+            <Route path="/forgot-password" component={ForgotPassword} />  
+            <Route path="/forgot-pass-verified" component={ForgotPasswordVerified} /> 
+            <Route path="/signup-success" componenet={SignupSuccess} />
           </Switch>
       </Router>   
     </div>

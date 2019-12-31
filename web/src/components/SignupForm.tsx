@@ -10,7 +10,7 @@ const SignupForm : React.FC<Props> = () => {
 
     // if (store.signupVerification && !store.isLogin){
     //     console.log("redirect to new component")
-    //    return  <Redirect to ='/SignupSuccess' /> 
+    //    return  <Redirect to ='/signup-success' /> 
     // }
     
     return (
@@ -58,7 +58,7 @@ const SignupForm : React.FC<Props> = () => {
                              </Container>
                          </div>
                          <button type="submit" className="ui primary button" onClick={store.handleSignup}>Signup</button>
-                         <p>Got an account?   <Link to="/LoginForm" onClick={store.ResetFormInput}>Login</Link> </p>
+                         <p>Got an account?   <Link to="/login" onClick={store.ResetFormInput}>Login</Link> </p>
                  </Segment>
              </form>
         </Grid.Column>
@@ -67,4 +67,4 @@ const SignupForm : React.FC<Props> = () => {
     </div> 
     )
 }
-export default SignupForm
+export {SignupForm}

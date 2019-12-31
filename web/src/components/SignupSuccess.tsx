@@ -17,7 +17,7 @@ const SignupSuccess: React.FC<Props> = () => {
                     <Form.Field>
                      <h2>Email Verification</h2>
                              <p className="success-msg"><i className="check circle icon"></i>A verification link has been sent to your email. Please check your email and confirm your email address.</p> 
-                         <Button type="cancel"><NavLink to="/LoginForm" onClick={store.ResetFormInput}>OK</NavLink></Button>
+                         <Button type="cancel"><NavLink to="/login" onClick={store.ResetFormInput}>OK</NavLink></Button>
                     </Form.Field>
                  </Form>
              </Grid.Column>
@@ -27,4 +27,4 @@ const SignupSuccess: React.FC<Props> = () => {
     
 )
 }
-export default SignupSuccess
+export {SignupSuccess}

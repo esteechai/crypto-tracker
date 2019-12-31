@@ -13,4 +13,4 @@ const LoginNavBar: React.FC<Props> = () => {
     )
 }
 
-export default LoginNavBar
+export {LoginNavBar}

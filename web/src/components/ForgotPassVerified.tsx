@@ -17,7 +17,7 @@ const ForgotPasswordVerified: React.FC<Props> = () => {
                      <h2>Forgot Password</h2>
                              <p>A confirmation email has been sent to <b>{store.enteredEmail}</b>.</p> 
                              <p>Please check your inbox to complete reset password process.</p>
-                         <Button type="cancel"><NavLink to="/LoginForm" onClick={store.ResetFormInput}>OK</NavLink></Button>
+                         <Button type="cancel"><NavLink to="/login" onClick={store.ResetFormInput}>OK</NavLink></Button>
                     </Form.Field>
                  </Form>
              </Grid.Column>
@@ -25,4 +25,4 @@ const ForgotPasswordVerified: React.FC<Props> = () => {
     </div> 
 )
 }
-export default ForgotPasswordVerified
+export {ForgotPasswordVerified}

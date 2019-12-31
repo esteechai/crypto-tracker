@@ -8,13 +8,13 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = () => {
     const store = StoreContainer.useContainer() 
     if (!store.isLogin){
-        return <Redirect to= '/LoginForm' />
+        return <Redirect to= '/login' />
     }
     return (
         <div></div>
     )
 }
 
-export default Dashboard
+export {Dashboard}
 
 

@@ -1,22 +1,16 @@
-import React, {useEffect} from 'react'
+import React, {} from 'react'
 import { StoreContainer } from '../store'
 import {Container, Grid, Segment} from 'semantic-ui-react'
 import {Link, Redirect} from 'react-router-dom'
 
 interface Props{}
 
-const LoginForm: React.FC<Props> = () => {
+const Login: React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
     if(store.isLogin){
         store.fetchDataFromAPI("/api/get/products","product")
-       return <Redirect to= '/CryptoList' />
+       return <Redirect to= '/crypto-list' />
     }
-
-
-// useEffect(() => {
-   
-// },[])
-
     
 return(
     <div className="login-signup-container">
@@ -53,8 +47,8 @@ return(
                             </div>
 
                             <button type="submit" className="ui primary button" onClick={store.handleLogin}>Log in</button>
-                            <p><Link to = "/ForgotPassword" onClick={store.ResetFormInput}>Forgot password?</Link></p>
-                            <p>Don't have an account yet?<Link to="/SignupForm" onClick={store.ResetFormInput}>Signup</Link></p> 
+                            <p><Link to = "/forgot-password" onClick={store.ResetFormInput}>Forgot password?</Link></p>
+                            <p>Don't have an account yet?<Link to="/signup" onClick={store.ResetFormInput}>Signup</Link></p> 
                     </Segment>
                 </form>
          </Grid.Column>
@@ -64,5 +58,6 @@ return(
 )
 }
 
-export default LoginForm
+// export default LoginForm
+export {Login}
 

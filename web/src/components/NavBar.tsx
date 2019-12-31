@@ -24,11 +24,11 @@ const NavBar: React.FC<Props> = () => {
                 </Menu.Item>
                 <Menu.Menu position="right">
                 <Menu.Item name="Cryptocurrency">
-                    <NavLink to ="/CryptoList">Cryptocurrency</NavLink>
+                    <NavLink to ="/crypto-list">Cryptocurrency</NavLink>
                 </Menu.Item>
 
                 <Menu.Item>
-                    <NavLink to ="/FavCrypto">Favourites</NavLink>
+                    <NavLink to ="/fav">Favourites</NavLink>
                     </Menu.Item>
                 
             <Dropdown item icon="user"simple>
@@ -41,7 +41,7 @@ const NavBar: React.FC<Props> = () => {
                         onConfirm={store.ConfirmLogout}
                     />
                     <Dropdown.Divider />
-                    <Dropdown.Item><NavLink to = "/ResetPassword" onClick={store.ResetResetPwInput}>Reset Password</NavLink></Dropdown.Item>
+                    <Dropdown.Item><NavLink to = "/reset-password" onClick={store.ResetResetPwInput}>Reset Password</NavLink></Dropdown.Item>
                 </Dropdown.Menu>
             </Dropdown>
             </Menu.Menu> 
@@ -50,4 +50,4 @@ const NavBar: React.FC<Props> = () => {
     )
 }
 
-export default NavBar
+export {NavBar}

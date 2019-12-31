@@ -9,7 +9,7 @@ interface Props {}
 const ResetPassword: React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
     if (!store.isLogin){
-        return <Redirect to= '/LoginForm' />
+        return <Redirect to= '/login' />
     }
     return (  
     <div className="reset-pw">
@@ -39,11 +39,11 @@ const ResetPassword: React.FC<Props> = () => {
                         </div>
                     </Form.Field>
                     <Button type="submit" className="ui primary button" onClick={store.handleResetPassword}>Save changes</Button>
-                    <Button type="cancel"><NavLink to="/CryptoList" onClick={store.ResetResetPwInput}>Cancel</NavLink></Button>
+                    <Button type="cancel"><NavLink to="/crypto-list" onClick={store.ResetResetPwInput}>Cancel</NavLink></Button>
                  </Form>
              </Grid.Column>
         </Grid>
     </div> 
 )
 }
-export default ResetPassword
+export {ResetPassword}

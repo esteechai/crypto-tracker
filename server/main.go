@@ -24,7 +24,7 @@ func main() {
 	Scheme := flag.String("scheme", "http", "scheme for http or https")
 	ServerDomain := flag.String("server-domain", "cryptotracker.interns.theninja.life", "server domain name")
 	EmailAPIKey := flag.String("email-api-key", "", "api key for sending email")
-	EmailDomain := flag.String("email-domain", "sandbox780aae9321c242b999909e946d7d9f5b.mailgun.org", "domain name for sending email")
+	EmailDomain := flag.String("email-domain", "", "domain name for sending email")
 
 	flag.Parse()
 

@@ -11,7 +11,7 @@ interface coinbaseProductsProps {
 const CryptoList: React.FC<coinbaseProductsProps> = () => {
     const store = StoreContainer.useContainer()
     if (!store.isLogin){
-        return <Redirect to= '/LoginForm' />
+        return <Redirect to= '/login' />
     }
        return (
         <Card.Group>
@@ -43,4 +43,4 @@ const CryptoList: React.FC<coinbaseProductsProps> = () => {
     )
 }
 
-export default CryptoList
+export {CryptoList}
