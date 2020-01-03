@@ -5,6 +5,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  position: relative;
 }
 
 .App{
@@ -32,10 +33,6 @@ code {
   min-height: 80px;
 }
 
-/* .login-navbar {
-  height: 35px;
-} */
-
 .login-signup-container {
   margin-top: 20px
 }
@@ -51,7 +48,6 @@ code {
 .reset-pw {
   margin-top: 50px;
    display: flex;
-   /* align-items: center; */
   justify-content: center;
   
 }
@@ -61,4 +57,22 @@ code {
   margin-top: 5px;
   font-size: 14px;
   margin-bottom: 15px;
+}
+
+.footer {
+  position: relative;
+  width: 100%;
+  bottom:0;
+  padding-bottom:20px;
+  text-align: center;
+  color: rgb(30,144,255);
+  font-family: 'helvetica', sans-serif;
+  font-size: 15px;
+  font-weight: bold;
+}
+
+.parent-element {
+  margin: auto;
+  height: 100%;
+  position: fixed;
 }

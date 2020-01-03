@@ -8,10 +8,9 @@ interface Props {}
 const SignupForm : React.FC<Props> = () => {
     const store = StoreContainer.useContainer()
 
-    // if (store.signupVerification && !store.isLogin){
-    //     console.log("redirect to new component")
-    //    return  <Redirect to ='/signup-success' /> 
-    // }
+    if (!store.isLogin && store.signupVerification){
+        return <Redirect to= '/signup-success' />
+    }
     
     return (
         <div className="login-signup-container">
@@ -22,9 +21,7 @@ const SignupForm : React.FC<Props> = () => {
                  <Segment stacked>
                      <h2> Signup</h2>
                            {(store.isError && store.errorMsg && store.isSubmit) ?
-                      <div className="login-error"><i className="times circle outline icon"></i>{store.errorMsg}</div> : 
-                        <div className="success-msg"><i className="check circle icon"></i>{store.successMsg}</div>}  
-                       
+                      <div className="login-error"><i className="times circle outline icon"></i>{store.errorMsg}</div> : ''} 
                          <div className="login-signup-form">
                              <Container textAlign="left">
                                  <div className={'field required' + (!store.enteredUsername ? 'login-input-error' : '')}>
@@ -58,7 +55,7 @@ const SignupForm : React.FC<Props> = () => {
                              </Container>
                          </div>
                          <button type="submit" className="ui primary button" onClick={store.handleSignup}>Signup</button>
-                         <p>Got an account?   <Link to="/login" onClick={store.ResetFormInput}>Login</Link> </p>
+                         <p>Got an account? <Link to="/login" onClick={store.ResetFormInput}>Login</Link> </p>
                  </Segment>
              </form>
         </Grid.Column>

@@ -58,6 +58,5 @@ return(
 )
 }
 
-// export default LoginForm
 export {Login}
 

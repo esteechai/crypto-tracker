@@ -10,7 +10,6 @@ const [enteredEmail, setEnteredEmail] = useState<string>("")
 const [enteredPassword, setEnteredPassword] = useState<string>("")
 const [isSubmit, setIsSubmit] = useState<boolean>(false)
 const [isLogin, setIsLogin] = useState<boolean>(false)
-// const [isSignup, setIsSignup] = useState<boolean>(false)
 const [signupVerification, setSignupVerification] = useState<boolean>(false)
 const [isError, setIsError] = useState<boolean>(false)
 const [errorMsg, setErrorMsg] = useState<string>("")
@@ -19,7 +18,7 @@ const [isPopUp, setPopUp] = useState<boolean>(false)
 const [productList, setProductList] = React.useState<coinbaseProducts[] | undefined>(undefined)
 const [searchKey, setSearchKey] = useState<string>("")
 const [searchResult, setSearchResult] = useState<coinbaseProducts[] | undefined>(undefined)
-const [favList, setFavList] = useState<FavToggle [] | undefined>(undefined)
+// const [favList, setFavList] = useState<FavToggle [] | undefined>(undefined)
 const [currentUser, setCurrentUser] = useState<string>("")
 const [userFavList, setUserFavList] = useState<UserFavList [] | undefined>(undefined)
 const [openLogoutMsg, setOpenLogoutMsg] = useState<boolean>(false)
@@ -27,6 +26,7 @@ const [enteredCurrentPw, setEnteredCurrentPw] = useState<string>("")
 const [enteredNewPw, setEnteredNewPw] = useState<string>("")
 const [successMsg, setSuccesMsg] = useState<string>("")
 const [verifiedEmail, setVerifiedEmail] = useState<boolean>(false) 
+const [passReset, setPassReset] = useState<Boolean>(false)
 
 useEffect(() => {
     fetchDataFromAPI("/api/auth", "readCookie")
@@ -47,6 +47,7 @@ const ResetFormInput = () => {
 
 //reset Reset Password Form input 
 const ResetResetPwInput = () => {
+    setPassReset(false)
     setIsSubmit(false)
     setIsError(false)
     setEnteredCurrentPw("")
@@ -137,15 +138,9 @@ async function postData(url: string, body:any, tag: string){
             break
 
         case "signup": 
-        console.log("signup result:", json.is_signup)
-            if(!json.is_signup){
-                setIsError(!json.is_signup)
-                setErrorMsg(handleErrorMsg(json.error_msg))
-            }
-            else if(json.is_signup === true && json.is_verified === false){
-                setSignupVerification(true)
-                setSuccesMsg("A verification link has been sent to your email. Please check your email and confirm your email address.")
-            }
+            setSignupVerification(json.is_signup)
+            setIsError(!json.is_signup)
+            setErrorMsg(handleErrorMsg(json.error_msg))
             break
 
         case "resetPassword":
@@ -153,7 +148,7 @@ async function postData(url: string, body:any, tag: string){
             if(json.success){
                 setEnteredCurrentPw("")
                 setEnteredNewPw("")
-                setSuccesMsg("Your password has been reset")
+                setPassReset(true)
             } else{
                  setIsError(!json.success)
                  setErrorMsg(handleErrorMsg(json.error_msg))
@@ -186,6 +181,7 @@ const handleLogin = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 }
 
 const handleSignup = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+    setErrorMsg("")
     setIsSubmit(true)
     event.preventDefault() 
     if(signupValidation()){
@@ -194,7 +190,6 @@ const handleSignup = (event:React.MouseEvent<HTMLButtonElement, MouseEvent>) => 
     } else {
         setIsError(true)
     }
-    ResetFormInput()
 }
 
 const handleSelectedProduct = (id:string) => {
@@ -416,6 +411,7 @@ return {
     ResetForgotPassInput,
     HandleForgotPassword,
     verifiedEmail,
+    passReset
 }
 }
 

@@ -1,6 +1,6 @@
 import React from 'react'
 import { StoreContainer } from '../store'
-import {Form, Button, Container, Grid} from 'semantic-ui-react'
+import {Form, Button, Grid} from 'semantic-ui-react'
 import { NavLink } from 'react-router-dom'
 import {Redirect} from 'react-router-dom'
 
@@ -11,17 +11,19 @@ const ResetPassword: React.FC<Props> = () => {
     if (!store.isLogin){
         return <Redirect to= '/login' />
     }
+
+    if (store.passReset && store.isLogin){
+        return <Redirect to = '/reset-pass-success'/>
+    }
+
     return (  
     <div className="reset-pw">
-      
         <Grid verticalAlign="middle" > 
             <Grid.Column style={{width:500}}>  
                 <Form>
                      <h2>Reset Password</h2>
                     {(store.isError && store.errorMsg && store.isSubmit) ?
-                    <div className="login-error"><i className="times circle outline icon"></i>{store.errorMsg}</div> : 
-                    <div className="success-msg"><i className="check circle icon"></i>{store.successMsg}</div>}      
-                            {/* </div> */}
+                    <div className="login-error"><i className="times circle outline icon"></i>{store.errorMsg}</div> : '' }
                     <Form.Field>
                         <div>
                              <label><b>Current password:</b></label>

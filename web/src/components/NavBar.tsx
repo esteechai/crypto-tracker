@@ -1,7 +1,7 @@
 import React from 'react'
 import { StoreContainer } from '../store'
-import { Menu, Input, Search, Dropdown, Confirm } from 'semantic-ui-react'
-import { NavLink, Link } from 'react-router-dom'
+import { Menu, Input, Dropdown, Confirm } from 'semantic-ui-react'
+import { NavLink} from 'react-router-dom'
 interface Props {}
 
 const NavBar: React.FC<Props> = () => {

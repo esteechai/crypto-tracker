@@ -14,7 +14,7 @@ const FavCrypto: React.FC<FavCryptoProps> = () => {
         return <Redirect to= '/login' />
     }
     return (
-        <Card.Group>  
+        <Card.Group className="ui centered">  
         {store.userFavList?store.userFavList.map((favProducts:UserFavList)=>{           
             return (
                 <Card key={favProducts.ID}>

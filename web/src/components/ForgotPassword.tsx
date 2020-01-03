@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react'
+import React from 'react'
 import { StoreContainer } from '../store'
 import {Form, Button, Grid} from 'semantic-ui-react'
 import { NavLink, Redirect } from 'react-router-dom'
@@ -25,7 +25,7 @@ const ForgotPassword: React.FC<Props> = () => {
                     <Form.Field>
                         <div>
                              <label><b>Email address:</b></label>
-                            <input placeholder="current password" value={store.enteredEmail} onChange={store.handleEnteredEmail}/>
+                            <input placeholder="email address" value={store.enteredEmail} onChange={store.handleEnteredEmail}/>
                             {store.isSubmit && !store.enteredEmail && 
                             <div className="login-error"> Required </div>}                        
                         </div>

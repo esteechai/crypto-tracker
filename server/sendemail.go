@@ -15,7 +15,7 @@ func (e *SendEmailInfo) VerifyEmail(email string, veriToken string) error {
 		"Crypto Tracker<mailgun@"+e.EmailDomain+">",
 		"Confirm Your Registration",
 		"You're one click away from getting latest information on cryptocurrencies! \n\nPlease click on the link below to verify your account: \n"+url,
-		"mahemailadd@gmail.com",
+		email,
 	)
 	_, _, err := mg.Send(context.Background(), m)
 	if err != nil {
@@ -32,7 +32,7 @@ func (e *SendEmailInfo) ResetPassword(email string, resetPassToken string) error
 		"Crypto Tracker<mailgun@"+e.EmailDomain+">",
 		"Reset Your Password",
 		"You've requested a password reset.\n To change your password, click on the link below: \n"+url,
-		"mahemailadd@gmail.com",
+		email,
 	)
 	_, _, err := mg.Send(context.Background(), m)
 	if err != nil {

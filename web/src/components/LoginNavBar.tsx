@@ -1,6 +1,6 @@
 import React from 'react'
-import { Menu, Input, Search, Dropdown, Icon } from 'semantic-ui-react'
-import { NavLink } from 'react-router-dom'
+import { Menu} from 'semantic-ui-react'
+
 interface Props {}
 
 const LoginNavBar: React.FC<Props> = () => {
