@@ -19,6 +19,7 @@ func (e *SendEmailInfo) VerifyEmail(email string, veriToken string) error {
 	)
 	_, _, err := mg.Send(context.Background(), m)
 	if err != nil {
+		fmt.Println("signup error: ", err)
 		return VerifyEmailError
 	}
 	return nil

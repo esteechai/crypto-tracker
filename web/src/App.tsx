@@ -13,7 +13,6 @@ import {ResetPassword} from './components/ResetPassword';
 import {ForgotPassword} from './components/ForgotPassword';
 import {ForgotPasswordVerified} from './components/ForgotPassVerified';
 import {SignupSuccess} from './components/SignupSuccess';
-import { Footer } from './components/Footer';
 import { ResetPassSuccess } from './components/ResetPasswordSuccess';
 
 const App: React.FC = () => {
@@ -36,7 +35,6 @@ const App: React.FC = () => {
               <Route path ="/signup-success" component={SignupSuccess} />
               <Route path="/reset-pass-success" component={ResetPassSuccess}/>
             </Switch>           
-          <Footer />
       </Router>   
   );
 }

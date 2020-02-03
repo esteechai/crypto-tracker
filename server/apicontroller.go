@@ -197,20 +197,22 @@ func (api *API) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
-	if err != nil {
-		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
-		json.NewEncoder(w).Encode(passback)
-		return
-	}
+	//send acc verification link via email
 
-	err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
-	if err != nil {
-		fmt.Println("email err: ", err)
-		passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
-		json.NewEncoder(w).Encode(passback)
-		return
-	}
+	// verifToken, err := api.DB.GetVerifToken(userSignUpData.Username, userSignUpData.Email)
+	// if err != nil {
+	// 	passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
+	// 	json.NewEncoder(w).Encode(passback)
+	// 	return
+	// }
+
+	// err = api.EmailInfo.VerifyEmail(userSignUpData.Email, verifToken)
+
+	// if err != nil {
+	// 	passback = &SignupResult{IsSignup: false, ErrorMsg: err.Error(), IsVerified: false}
+	// 	json.NewEncoder(w).Encode(passback)
+	// 	return
+	// }
 
 	passback = &SignupResult{IsSignup: true, ErrorMsg: "", IsVerified: false}
 	json.NewEncoder(w).Encode(passback)
