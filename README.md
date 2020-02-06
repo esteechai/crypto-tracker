@@ -16,6 +16,8 @@ Full stack web application to get latest cryptocurrencies information :)
  
  ![](dashboard.png)
  
+ 
+ 
  ![](favList.png)
  
 ## Instructions
