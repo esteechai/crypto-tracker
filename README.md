@@ -1,7 +1,8 @@
 # Crypto Tracker
+full stack web application to get latest cryptocurrencies information.
 
-### Setup
-
-## Crypto Tracker 
+## Setup
+- clone repository 
+### Crypto Tracker 
 
 
