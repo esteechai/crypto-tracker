@@ -1,5 +1,6 @@
 # Crypto Tracker
-full stack web application to get latest cryptocurrencies information.
+Full stack web application to get latest cryptocurrencies information :)
+
 
 ## Features 
 - Signup and login 
@@ -7,24 +8,25 @@ full stack web application to get latest cryptocurrencies information.
 - Reset password 
 - Logout
 - Search cryptocurrencies 
+- View selected cryptocurrency details 
 - Save cryptocurrency to Favourite list 
 - View Favourites 
 - Remove cryptocurrency from Favourties 
  
-
+ 
 ## Instructions
 
 ### Setup 
 - Clone repository
+- Download Go 
+
 #### frontend 
 - Install npm 
 - Change directory to web folder and run  "npm run build"
 - Open http://localhost:3000 to view in browser
 
 #### backend 
-- 
+- Change directory to server folder and run "go run *.go"
 
-
-### Crypto Tracker 
 
 
