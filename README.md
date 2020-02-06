@@ -1,18 +1,25 @@
 # Crypto Tracker
 Full stack web application to get latest cryptocurrencies information :)
 
+![](home.png)
 
 ## Features 
 - Signup and login 
 - Forgot password 
 - Reset password 
 - Logout
-- Search cryptocurrencies 
+- Search cryptocurrencies
 - View selected cryptocurrency details 
 - Save cryptocurrency to Favourite list 
 - View Favourites 
 - Remove cryptocurrency from Favourties 
  
+ ![](dashboard.png)
+ 
+ 
+ 
+ 
+ ![](favList.png)
  
 ## Instructions
 
