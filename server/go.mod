@@ -10,5 +10,6 @@ require (
 	github.com/lib/pq v1.2.0
 	github.com/mailgun/mailgun-go/v3 v3.6.3
 	github.com/ninja-software/go-check-passwd v0.0.0-20191023080747-0879e647a3ab
-	golang.org/x/crypto v0.0.0-20191105034135-c7e5f84aec59
+	golang.org/x/crypto v0.1.0
+	google.golang.org/appengine v1.6.7 // indirect
 )
